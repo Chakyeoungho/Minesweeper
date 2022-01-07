@@ -17,6 +17,7 @@ void selectLvButton();    // 난이도 선택 버튼 생성
 void easyLv_board(pGameData ap_data);    // 쉬움 난이도 판 생성
 void normalLv_board(pGameData ap_data);    // 보통 난이도 판 생성
 void hardLv_board(pGameData ap_data);    // 어려움 난이도 판 생성
+void randMine(pGameData ap_data, int mineNum, int x_count, int y_count);    // 랜덤으로 지뢰 생성
 
 void OnLButtonDown(int a_mixed_key, POINT a_pos)
 {
@@ -64,20 +65,22 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 				}
 			}
 		}
-	}
-	else {
+	} else {
 		if (p_data->game_step == 0) {
 			if (a_pos.x >= 20 && a_pos.x <= 108 && a_pos.y >= 10 && a_pos.y <= 38) {
+				randMine(p_data, EASY_MINE_NUM, EASY_X_COUNT, EASY_Y_COUNT);
 				easyLv_board(p_data);
 				p_data->level = EASY;
 				p_data->game_step++;
 			}
 			else if (a_pos.x >= 120 && a_pos.x <= 208 && a_pos.y >= 10 && a_pos.y <= 38) {
+				randMine(p_data, NORMAL_MINE_NUM, NORMAL_X_COUNT, NORMAL_Y_COUNT);
 				normalLv_board(p_data);
 				p_data->level = NORMAL;
 				p_data->game_step++;
 			}
 			else if (a_pos.x >= 220 && a_pos.x <= 308 && a_pos.y >= 10 && a_pos.y <= 38) {
+				randMine(p_data, HARD_MINE_NUM, HARD_X_COUNT, HARD_Y_COUNT);
 				hardLv_board(p_data);
 				p_data->level = HARD;
 				p_data->game_step++;
@@ -88,7 +91,9 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			if (p_data->level == EASY) {
 				unsigned int x = (unsigned int)a_pos.x / EASY_GRID_SIZE, y = (unsigned int)a_pos.y / EASY_GRID_SIZE;
 				if (x < EASY_X_COUNT && y < EASY_Y_COUNT) {
-					if (p_data->state_hard[y][x] == nothing_closed)
+					if (p_data->state_hard[y][x] == mine)
+						p_data->game_step = 100;
+					else if (p_data->state_hard[y][x] == nothing_closed)
 						p_data->state_hard[y][x] = nothing_open;
 
 					easyLv_board(p_data);
@@ -97,7 +102,9 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			else if (p_data->level == NORMAL) {
 				unsigned int x = (unsigned int)a_pos.x / NORMAL_GRID_SIZE, y = (unsigned int)a_pos.y / NORMAL_GRID_SIZE;
 				if (x < NORMAL_X_COUNT && y < NORMAL_Y_COUNT) {
-					if (p_data->state_hard[y][x] == nothing_closed)
+					if (p_data->state_hard[y][x] == mine)
+						p_data->game_step = 100;
+					else if (p_data->state_hard[y][x] == nothing_closed)
 						p_data->state_hard[y][x] = nothing_open;
 
 					normalLv_board(p_data);
@@ -106,7 +113,9 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			else if (p_data->level == HARD) {
 				unsigned int x = (unsigned int)a_pos.x / HARD_GRID_SIZE, y = (unsigned int)a_pos.y / HARD_GRID_SIZE;
 				if (x < HARD_X_COUNT && y < HARD_Y_COUNT) {
-					if (p_data->state_hard[y][x] == nothing_closed)
+					if (p_data->state_hard[y][x] == mine)
+						p_data->game_step = 100;
+					else if (p_data->state_hard[y][x] == nothing_closed)
 						p_data->state_hard[y][x] = nothing_open;
 
 					hardLv_board(p_data);
@@ -176,6 +185,13 @@ void easyLv_board(pGameData ap_data)
 		}
 	}
 
+	for (int y = 0; y < EASY_Y_COUNT; y++) {
+		for (int x = 0; x < EASY_X_COUNT; x++) {
+			if (ap_data->state_hard[y][x] == mine)
+				Rectangle(x * EASY_GRID_SIZE, y * EASY_GRID_SIZE, (x + 1) * EASY_GRID_SIZE, (y + 1) * EASY_GRID_SIZE, BLACK, BLACK);
+		}
+	}
+
 	ShowDisplay();
 }
 
@@ -196,6 +212,13 @@ void normalLv_board(pGameData ap_data)
 				Ellipse(x * NORMAL_GRID_SIZE, y * NORMAL_GRID_SIZE, (x + 1) * NORMAL_GRID_SIZE, (y + 1) * NORMAL_GRID_SIZE, RGB(200, 100, 0), RGB(128, 0, 0));
 			else if (ap_data->state_hard[y][x] == questionMark)
 				Ellipse(x * NORMAL_GRID_SIZE, y * NORMAL_GRID_SIZE, (x + 1) * NORMAL_GRID_SIZE, (y + 1) * NORMAL_GRID_SIZE, WHITE, BLACK);
+		}
+	}
+
+	for (int y = 0; y < NORMAL_Y_COUNT; y++) {
+		for (int x = 0; x < NORMAL_X_COUNT; x++) {
+			if (ap_data->state_hard[y][x] == mine)
+				Rectangle(x * NORMAL_GRID_SIZE, y * NORMAL_GRID_SIZE, (x + 1) * NORMAL_GRID_SIZE, (y + 1) * NORMAL_GRID_SIZE, BLACK, BLACK);
 		}
 	}
 
@@ -222,5 +245,26 @@ void hardLv_board(pGameData ap_data)
 		}
 	}
 
+	for (int y = 0; y < HARD_Y_COUNT; y++) {
+		for (int x = 0; x < HARD_X_COUNT; x++) {
+			if (ap_data->state_hard[y][x] == mine)
+				Rectangle(x * HARD_GRID_SIZE, y * HARD_GRID_SIZE, (x + 1) * HARD_GRID_SIZE, (y + 1) * HARD_GRID_SIZE, BLACK, BLACK);
+		}
+	}
+
 	ShowDisplay();
+}
+
+void randMine(pGameData ap_data, int mineNum, int x_count, int y_count)
+{
+	srand(time(NULL));
+	int tempX, tempY;
+	int tempMineNum = 0;
+
+	while(tempMineNum != mineNum) {
+		if (ap_data->state_hard[tempY = (rand() % y_count)][tempX = (rand() % x_count)] != mine) {
+			ap_data->state_hard[tempY][tempX] = mine;
+			tempMineNum++;
+		}
+	}
 }
