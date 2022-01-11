@@ -21,6 +21,7 @@ enum {
 	mine_num6_closed,
 	mine_num7_closed,
 	mine_num8_closed,
+	mine_closed,
 	nothing_open = 10,
 	mine_num1_open,
 	mine_num2_open,
@@ -30,8 +31,8 @@ enum {
 	mine_num6_open,
 	mine_num7_open,
 	mine_num8_open,
-	mine = 20,
-	flag,
+	mine_open,
+	flag = 20,
 	questionMark
 };
 
