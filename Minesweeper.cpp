@@ -6,9 +6,8 @@
 
 typedef struct _GameData // 게임 플레이중 필요한 데이터
 {
-	unsigned int state_hard[HARD_Y_COUNT][HARD_X_COUNT];    // 가장 큰 사이즈의 보드만 있어도 모든 난이도의 게임을 만들 수 있다
-	char click;
-	char tile_state;    // 타일 상태
+	// 가장 큰 사이즈의 보드만 있어도 모든 난이도의 게임을 만들 수 있다
+	unsigned int board_state[HARD_Y_COUNT][HARD_X_COUNT];
 	int level;     // 선택한 난이도
 	int game_step;    // 현재 게임 단계
 } GameData, *pGameData;
@@ -30,12 +29,12 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			if (p_data->level == EASY) {
 				unsigned int x = (unsigned int)a_pos.x / EASY_GRID_SIZE, y = (unsigned int)a_pos.y / EASY_GRID_SIZE;
 				if (x < EASY_X_COUNT && y < EASY_Y_COUNT) {
-					if (p_data->state_hard[y][x] == mine_closed)
-						p_data->state_hard[y][x] = flag;
-					else if (p_data->state_hard[y][x] == flag)
-						p_data->state_hard[y][x] = questionMark;
-					else if (p_data->state_hard[y][x] == questionMark)
-						p_data->state_hard[y][x] = mine_closed;
+					if (p_data->board_state[y][x] == mine_closed)
+						p_data->board_state[y][x] = flag;
+					else if (p_data->board_state[y][x] == flag)
+						p_data->board_state[y][x] = questionMark;
+					else if (p_data->board_state[y][x] == questionMark)
+						p_data->board_state[y][x] = mine_closed;
 
 					easyLv_board(p_data);
 				}
@@ -43,12 +42,12 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			else if (p_data->level == NORMAL) {
 				unsigned int x = (unsigned int)a_pos.x / NORMAL_GRID_SIZE, y = (unsigned int)a_pos.y / NORMAL_GRID_SIZE;
 				if (x < NORMAL_X_COUNT && y < NORMAL_Y_COUNT) {
-					if (p_data->state_hard[y][x] == mine_closed)
-						p_data->state_hard[y][x] = flag;
-					else if (p_data->state_hard[y][x] == flag)
-						p_data->state_hard[y][x] = questionMark;
-					else if (p_data->state_hard[y][x] == questionMark)
-						p_data->state_hard[y][x] = mine_closed;
+					if (p_data->board_state[y][x] == mine_closed)
+						p_data->board_state[y][x] = flag;
+					else if (p_data->board_state[y][x] == flag)
+						p_data->board_state[y][x] = questionMark;
+					else if (p_data->board_state[y][x] == questionMark)
+						p_data->board_state[y][x] = mine_closed;
 
 					normalLv_board(p_data);
 				}
@@ -56,12 +55,12 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			else if (p_data->level == HARD) {
 				unsigned int x = (unsigned int)a_pos.x / HARD_GRID_SIZE, y = (unsigned int)a_pos.y / HARD_GRID_SIZE;
 				if (x < HARD_X_COUNT && y < HARD_Y_COUNT) {
-					if (p_data->state_hard[y][x] == mine_closed)
-						p_data->state_hard[y][x] = flag;
-					else if (p_data->state_hard[y][x] == flag)
-						p_data->state_hard[y][x] = questionMark;
-					else if (p_data->state_hard[y][x] == questionMark)
-						p_data->state_hard[y][x] = mine_closed;
+					if (p_data->board_state[y][x] == mine_closed)
+						p_data->board_state[y][x] = flag;
+					else if (p_data->board_state[y][x] == flag)
+						p_data->board_state[y][x] = questionMark;
+					else if (p_data->board_state[y][x] == questionMark)
+						p_data->board_state[y][x] = mine_closed;
 
 					hardLv_board(p_data);
 				}
@@ -96,14 +95,14 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			if (p_data->level == EASY) {
 				unsigned int x = (unsigned int)a_pos.x / EASY_GRID_SIZE, y = (unsigned int)a_pos.y / EASY_GRID_SIZE;
 				if (x < EASY_X_COUNT && y < EASY_Y_COUNT) {
-					if (p_data->state_hard[y][x] == mine_closed) {
+					if (p_data->board_state[y][x] == mine_closed) {
 						Clear();
 						p_data->game_step = 100;
 					}
-					else if (p_data->state_hard[y][x] == nothing_closed)
+					else if (p_data->board_state[y][x] == nothing_closed)
 						openNothingClosed(p_data, x, y, EASY_X_COUNT, EASY_Y_COUNT);
-					else if (p_data->state_hard[y][x] <= mine_num8_closed)
-						p_data->state_hard[y][x] += 10;
+					else if (p_data->board_state[y][x] <= mine_num8_closed)
+						p_data->board_state[y][x] += 10;
 
 					easyLv_board(p_data);
 				}
@@ -111,14 +110,14 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			else if (p_data->level == NORMAL) {
 				unsigned int x = (unsigned int)a_pos.x / NORMAL_GRID_SIZE, y = (unsigned int)a_pos.y / NORMAL_GRID_SIZE;
 				if (x < NORMAL_X_COUNT && y < NORMAL_Y_COUNT) {
-					if (p_data->state_hard[y][x] == mine_closed) {
+					if (p_data->board_state[y][x] == mine_closed) {
 						Clear();
 						p_data->game_step = 100;
 					}
-					else if (p_data->state_hard[y][x] == nothing_closed)
+					else if (p_data->board_state[y][x] == nothing_closed)
 						openNothingClosed(p_data, x, y, NORMAL_X_COUNT, NORMAL_Y_COUNT);
-					else if (p_data->state_hard[y][x] <= mine_num8_closed)
-						p_data->state_hard[y][x] += 10;
+					else if (p_data->board_state[y][x] <= mine_num8_closed)
+						p_data->board_state[y][x] += 10;
 
 					normalLv_board(p_data);
 				}
@@ -126,14 +125,14 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			else if (p_data->level == HARD) {
 				unsigned int x = (unsigned int)a_pos.x / HARD_GRID_SIZE, y = (unsigned int)a_pos.y / HARD_GRID_SIZE;
 				if (x < HARD_X_COUNT && y < HARD_Y_COUNT) {
-					if (p_data->state_hard[y][x] == mine_closed) {
+					if (p_data->board_state[y][x] == mine_closed) {
 						Clear();
 						p_data->game_step = 100;
 					}
-					else if (p_data->state_hard[y][x] == nothing_closed)
+					else if (p_data->board_state[y][x] == nothing_closed)
 						openNothingClosed(p_data, x, y, HARD_X_COUNT, HARD_Y_COUNT);
-					else if (p_data->state_hard[y][x] <= mine_num8_closed)
-						p_data->state_hard[y][x] += 10;
+					else if (p_data->board_state[y][x] <= mine_num8_closed)
+						p_data->board_state[y][x] += 10;
 
 					hardLv_board(p_data);
 				}
@@ -182,20 +181,20 @@ void easyLv_board(pGameData ap_data)
 
 	for (int y = 0; y < EASY_Y_COUNT; y++) {
 		for (int x = 0; x < EASY_X_COUNT; x++) {
-			if (ap_data->state_hard[y][x] == flag)
+			if (ap_data->board_state[y][x] == flag)
 				Ellipse(x * EASY_GRID_SIZE, y * EASY_GRID_SIZE, (x + 1) * EASY_GRID_SIZE, (y + 1) * EASY_GRID_SIZE, RGB(200, 100, 0), RGB(128, 0, 0));
-			else if (ap_data->state_hard[y][x] == questionMark)
+			else if (ap_data->board_state[y][x] == questionMark)
 				Ellipse(x * EASY_GRID_SIZE, y * EASY_GRID_SIZE, (x + 1) * EASY_GRID_SIZE, (y + 1) * EASY_GRID_SIZE, WHITE, BLACK);
-			else if (ap_data->state_hard[y][x] >= mine_num1_open && ap_data->state_hard[y][x] <= mine_num8_open)
-				TextOut(x * EASY_GRID_SIZE, y * EASY_GRID_SIZE, WHITE, "%d", ap_data->state_hard[y][x] - 10);
-			else if (ap_data->state_hard[y][x] == nothing_open)
+			else if (ap_data->board_state[y][x] >= mine_num1_open && ap_data->board_state[y][x] <= mine_num8_open)
+				TextOut(x * EASY_GRID_SIZE, y * EASY_GRID_SIZE, WHITE, "%d", ap_data->board_state[y][x] - 10);
+			else if (ap_data->board_state[y][x] == nothing_open)
 				Rectangle(x * EASY_GRID_SIZE, y * EASY_GRID_SIZE, (x + 1) * EASY_GRID_SIZE, (y + 1) * EASY_GRID_SIZE, RGB(200, 100, 0), RGB(128, 0, 0));
 		}
 	}
 	
 	for (int y = 0; y < EASY_Y_COUNT; y++) {
 		for (int x = 0; x < EASY_X_COUNT; x++) {
-			if (ap_data->state_hard[y][x] == mine_open)
+			if (ap_data->board_state[y][x] == mine_open)
 				Rectangle(x * EASY_GRID_SIZE, y * EASY_GRID_SIZE, (x + 1) * EASY_GRID_SIZE, (y + 1) * EASY_GRID_SIZE, BLACK, BLACK);
 		}
 	}
@@ -214,20 +213,20 @@ void normalLv_board(pGameData ap_data)
 
 	for (int y = 0; y < NORMAL_Y_COUNT; y++) {
 		for (int x = 0; x < NORMAL_X_COUNT; x++) {
-			if (ap_data->state_hard[y][x] == flag)
+			if (ap_data->board_state[y][x] == flag)
 				Ellipse(x * NORMAL_GRID_SIZE, y * NORMAL_GRID_SIZE, (x + 1) * NORMAL_GRID_SIZE, (y + 1) * NORMAL_GRID_SIZE, RGB(200, 100, 0), RGB(128, 0, 0));
-			else if (ap_data->state_hard[y][x] == questionMark)
+			else if (ap_data->board_state[y][x] == questionMark)
 				Ellipse(x * NORMAL_GRID_SIZE, y * NORMAL_GRID_SIZE, (x + 1) * NORMAL_GRID_SIZE, (y + 1) * NORMAL_GRID_SIZE, WHITE, BLACK);
-			else if (ap_data->state_hard[y][x] >= mine_num1_open && ap_data->state_hard[y][x] <= mine_num8_open)
-				TextOut(x * NORMAL_GRID_SIZE, y * NORMAL_GRID_SIZE, WHITE, "%d", ap_data->state_hard[y][x] - 10);
-			else if (ap_data->state_hard[y][x] == nothing_open)
+			else if (ap_data->board_state[y][x] >= mine_num1_open && ap_data->board_state[y][x] <= mine_num8_open)
+				TextOut(x * NORMAL_GRID_SIZE, y * NORMAL_GRID_SIZE, WHITE, "%d", ap_data->board_state[y][x] - 10);
+			else if (ap_data->board_state[y][x] == nothing_open)
 				Rectangle(x * NORMAL_GRID_SIZE, y * NORMAL_GRID_SIZE, (x + 1) * NORMAL_GRID_SIZE, (y + 1) * NORMAL_GRID_SIZE, RGB(200, 100, 0), RGB(128, 0, 0));
 		}
 	}
 	
 	for (int y = 0; y < NORMAL_Y_COUNT; y++) {
 		for (int x = 0; x < NORMAL_X_COUNT; x++) {
-			if (ap_data->state_hard[y][x] == mine_open)
+			if (ap_data->board_state[y][x] == mine_open)
 				Rectangle(x * NORMAL_GRID_SIZE, y * NORMAL_GRID_SIZE, (x + 1) * NORMAL_GRID_SIZE, (y + 1) * NORMAL_GRID_SIZE, BLACK, BLACK);
 		}
 	}
@@ -246,20 +245,20 @@ void hardLv_board(pGameData ap_data)
 
 	for (int y = 0; y < HARD_Y_COUNT; y++) {
 		for (int x = 0; x < HARD_X_COUNT; x++) {
-			if (ap_data->state_hard[y][x] == flag)
+			if (ap_data->board_state[y][x] == flag)
 				Ellipse(x * HARD_GRID_SIZE, y * HARD_GRID_SIZE, (x + 1) * HARD_GRID_SIZE, (y + 1) * HARD_GRID_SIZE, RGB(200, 100, 0), RGB(128, 0, 0));
-			else if (ap_data->state_hard[y][x] == questionMark)
+			else if (ap_data->board_state[y][x] == questionMark)
 				Ellipse(x * HARD_GRID_SIZE, y * HARD_GRID_SIZE, (x + 1) * HARD_GRID_SIZE, (y + 1) * HARD_GRID_SIZE, WHITE, BLACK);
-			else if (ap_data->state_hard[y][x] >= mine_num1_open && ap_data->state_hard[y][x] <= mine_num8_open)
-				TextOut(x * HARD_GRID_SIZE, y * HARD_GRID_SIZE, WHITE, "%d", ap_data->state_hard[y][x] - 10);
-			else if (ap_data->state_hard[y][x] == nothing_open)
+			else if (ap_data->board_state[y][x] >= mine_num1_open && ap_data->board_state[y][x] <= mine_num8_open)
+				TextOut(x * HARD_GRID_SIZE, y * HARD_GRID_SIZE, WHITE, "%d", ap_data->board_state[y][x] - 10);
+			else if (ap_data->board_state[y][x] == nothing_open)
 				Rectangle(x * HARD_GRID_SIZE, y * HARD_GRID_SIZE, (x + 1) * HARD_GRID_SIZE, (y + 1) * HARD_GRID_SIZE, RGB(200, 100, 0), RGB(128, 0, 0));
 		}
 	}
 	
 	for (int y = 0; y < HARD_Y_COUNT; y++) {
 		for (int x = 0; x < HARD_X_COUNT; x++) {
-			if (ap_data->state_hard[y][x] == mine_open)
+			if (ap_data->board_state[y][x] == mine_open)
 				Rectangle(x * HARD_GRID_SIZE, y * HARD_GRID_SIZE, (x + 1) * HARD_GRID_SIZE, (y + 1) * HARD_GRID_SIZE, BLACK, BLACK);
 		}
 	}
@@ -270,12 +269,12 @@ void hardLv_board(pGameData ap_data)
 void randMine(pGameData ap_data, int mineNum, int x_count, int y_count)
 {
 	srand((unsigned int)time(NULL));
-	int tempX, tempY;
+	unsigned int tempX, tempY;
 	int tempMineNum = 0;
 
 	while(tempMineNum != mineNum) {
-		if (ap_data->state_hard[tempY = (rand() % y_count)][tempX = (rand() % x_count)] != mine_closed) {
-			ap_data->state_hard[tempY][tempX] = mine_closed;
+		if (ap_data->board_state[tempY = (rand() % y_count)][tempX = (rand() % x_count)] != mine_closed) {
+			ap_data->board_state[tempY][tempX] = mine_closed;
 			tempMineNum++;
 		}
 	}
@@ -289,7 +288,7 @@ void pluseMineNum(pGameData ap_data, int grid_size, int x_count, int y_count)
 	{
 		for (int j = 0; j < x_count; j++)
 		{
-			if (ap_data->state_hard[i][j] == mine_closed) {
+			if (ap_data->board_state[i][j] == mine_closed) {
 				continue;
 			} else {
 				for (int y = i - 1; y <= i + 1; y++)
@@ -298,11 +297,11 @@ void pluseMineNum(pGameData ap_data, int grid_size, int x_count, int y_count)
 					{
 						if (y < 0 || x < 0 || y >= y_count || x >= x_count)
 							continue;
-						else if (ap_data->state_hard[y][x] == mine_closed)
+						else if (ap_data->board_state[y][x] == mine_closed)
 							mine_num += 1;
 					}
 				}
-				ap_data->state_hard[i][j] = mine_num;
+				ap_data->board_state[i][j] = mine_num;
 				mine_num = 0;
 			}
 		}
@@ -313,13 +312,12 @@ void openNothingClosed(pGameData ap_data, int x_count, int y_count, int x_num, i
 {
 	for (int y = y_count - 1; y <= y_count + 1; y++) {
 		for (int x = x_count - 1; x <= x_count + 1; x++) {
-			if (y < 0 || x < 0 || x >= x_num || y >= y_num || 
-				(ap_data->state_hard[y][x] > mine_num8_closed))
+			if (y < 0 || x < 0 || x >= x_num || y >= y_num || ap_data->board_state[y][x] > mine_num8_closed)
 				continue;
 
-			ap_data->state_hard[y][x] += 10;
+			ap_data->board_state[y][x] += 10;
 
-			if (ap_data->state_hard[y][x] == nothing_open) {
+			if (ap_data->board_state[y][x] == nothing_open) {
 				openNothingClosed(ap_data, x, y, x_num, y_num);
 			}
 		}
