@@ -8,7 +8,9 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 {
 	// 가장 큰 사이즈의 보드만 있어도 모든 난이도의 게임을 만들 수 있다
 	unsigned int board_state[HARD_Y_COUNT][HARD_X_COUNT];
-	int level;     // 선택한 난이도
+	// 깃발과 물음표를 사용할 때 원래 보드의 상태를 기억
+	unsigned int board_temp[HARD_Y_COUNT][HARD_X_COUNT];
+	int level;        // 선택한 난이도
 	int game_step;    // 현재 게임 단계
 } GameData, *pGameData;
 
@@ -29,12 +31,14 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			if (p_data->level == EASY) {
 				unsigned int x = (unsigned int)a_pos.x / EASY_GRID_SIZE, y = (unsigned int)a_pos.y / EASY_GRID_SIZE;
 				if (x < EASY_X_COUNT && y < EASY_Y_COUNT) {
-					if (p_data->board_state[y][x] == mine_closed)
+					if (p_data->board_state[y][x] <= mine_closed) {
+						p_data->board_temp[y][x] = p_data->board_state[y][x];
 						p_data->board_state[y][x] = flag;
-					else if (p_data->board_state[y][x] == flag)
+					} else if (p_data->board_state[y][x] == flag) {
 						p_data->board_state[y][x] = questionMark;
-					else if (p_data->board_state[y][x] == questionMark)
-						p_data->board_state[y][x] = mine_closed;
+					} else if (p_data->board_state[y][x] == questionMark) {
+						p_data->board_state[y][x] = p_data->board_temp[y][x];
+					}
 
 					easyLv_board(p_data);
 				}
@@ -42,12 +46,14 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			else if (p_data->level == NORMAL) {
 				unsigned int x = (unsigned int)a_pos.x / NORMAL_GRID_SIZE, y = (unsigned int)a_pos.y / NORMAL_GRID_SIZE;
 				if (x < NORMAL_X_COUNT && y < NORMAL_Y_COUNT) {
-					if (p_data->board_state[y][x] == mine_closed)
+					if (p_data->board_state[y][x] <= mine_closed) {
+						p_data->board_temp[y][x] = p_data->board_state[y][x];
 						p_data->board_state[y][x] = flag;
-					else if (p_data->board_state[y][x] == flag)
+					} else if (p_data->board_state[y][x] == flag) {
 						p_data->board_state[y][x] = questionMark;
-					else if (p_data->board_state[y][x] == questionMark)
-						p_data->board_state[y][x] = mine_closed;
+					} else if (p_data->board_state[y][x] == questionMark) {
+						p_data->board_state[y][x] = p_data->board_temp[y][x];
+					}
 
 					normalLv_board(p_data);
 				}
@@ -55,12 +61,14 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 			else if (p_data->level == HARD) {
 				unsigned int x = (unsigned int)a_pos.x / HARD_GRID_SIZE, y = (unsigned int)a_pos.y / HARD_GRID_SIZE;
 				if (x < HARD_X_COUNT && y < HARD_Y_COUNT) {
-					if (p_data->board_state[y][x] == mine_closed)
+					if (p_data->board_state[y][x] <= mine_closed) {
+						p_data->board_temp[y][x] = p_data->board_state[y][x];
 						p_data->board_state[y][x] = flag;
-					else if (p_data->board_state[y][x] == flag)
+					} else if (p_data->board_state[y][x] == flag) {
 						p_data->board_state[y][x] = questionMark;
-					else if (p_data->board_state[y][x] == questionMark)
-						p_data->board_state[y][x] = mine_closed;
+					} else if (p_data->board_state[y][x] == questionMark) {
+						p_data->board_state[y][x] = p_data->board_temp[y][x];
+					}
 
 					hardLv_board(p_data);
 				}
