@@ -22,7 +22,7 @@ void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
 void pluseMineNum(pGameData ap_data, int grid_size, int x_count, int y_count);    // 지뢰 주변 1씩 증가
 void clickBoard(pGameData ap_data, unsigned int x, unsigned int y);    // 판 클릭
-void openNothingClosed(pGameData ap_data, int x_count, int y_count, int x_num, int y_num);    // 연쇄적으로 판 오픈
+void openNothingClosed(pGameData ap_data, int x_count, int y_count);    // 연쇄적으로 판 오픈
 void flagQuesBoard(pGameData ap_data, unsigned int x, unsigned int y);    // 깃발과 물음표 관리
 
 void OnLButtonDown(int a_mixed_key, POINT a_pos)
@@ -211,7 +211,7 @@ void clickBoard(pGameData ap_data, unsigned int x, unsigned int y)
 			ap_data->game_step = GAMEOVER;
 		}
 		else if (ap_data->board_state[y][x] == nothing_closed)
-			openNothingClosed(ap_data, x, y, ap_data->x_count[ap_data->level - 1000], ap_data->y_count[ap_data->level - 1000]);
+			openNothingClosed(ap_data, x, y);
 		else if (ap_data->board_state[y][x] <= mine_num8_closed)
 			ap_data->board_state[y][x] += 10;
 
@@ -219,17 +219,17 @@ void clickBoard(pGameData ap_data, unsigned int x, unsigned int y)
 	}
 }
 
-void openNothingClosed(pGameData ap_data, int x_count, int y_count, int x_num, int y_num)
+void openNothingClosed(pGameData ap_data, int x_pos, int y_pos)
 {
-	for (int y = y_count - 1; y <= y_count + 1; y++) {
-		for (int x = x_count - 1; x <= x_count + 1; x++) {
-			if (y < 0 || x < 0 || x >= x_num || y >= y_num || ap_data->board_state[y][x] > mine_num8_closed)
+	for (int y = y_pos - 1; y <= y_pos + 1; y++) {
+		for (int x = x_pos - 1; x <= x_pos + 1; x++) {
+			if (y < 0 || x < 0 || x >= ap_data->x_count[ap_data->level - 1000] || y >= ap_data->y_count[ap_data->level - 1000] || ap_data->board_state[y][x] > mine_num8_closed)
 				continue;
 
 			ap_data->board_state[y][x] += 10;
 
 			if (ap_data->board_state[y][x] == nothing_open) {
-				openNothingClosed(ap_data, x, y, x_num, y_num);
+				openNothingClosed(ap_data, x, y);
 			}
 		}
 	}
