@@ -1,8 +1,8 @@
 ﻿#include "pch.h"
 #include "tipsware.h"
-#include "Constant.h"
-#include <stdlib.h>
-#include <time.h>
+#include "Constant.h"    // 필요한 상수를 모아놓은 헤더파일
+#include <stdlib.h>      // srand()와 rand()를 사용하기 위한 헤더파일
+#include <time.h>        // 난수의 시드값을 설정하기 위한 헤더파일
 
 typedef struct _GameData // 게임 플레이중 필요한 데이터
 {
@@ -17,13 +17,13 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 } GameData, *pGameData;
 
 void selectLvButton();    // 난이도 선택 버튼 생성
-void selectLevel(pGameData ap_data, unsigned int x, unsigned int y);
-void drawBoard(pGameData ap_data);
+void selectLevel(pGameData ap_data, unsigned int x, unsigned int y);    // 난이도 선택
+void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data);    // 랜덤으로 지뢰 생성
 void pluseMineNum(pGameData ap_data, int grid_size, int x_count, int y_count);    // 지뢰 주변 1씩 증가
-void clickBoard(pGameData ap_data, unsigned int x, unsigned int y);
-void openNothingClosed(pGameData ap_data, int x_count, int y_count, int x_num, int y_num);
-void flagQuesBoard(pGameData ap_data, unsigned int x, unsigned int y);
+void clickBoard(pGameData ap_data, unsigned int x, unsigned int y);    // 판 클릭
+void openNothingClosed(pGameData ap_data, int x_count, int y_count, int x_num, int y_num);    // 연쇄적으로 판 오픈
+void flagQuesBoard(pGameData ap_data, unsigned int x, unsigned int y);    // 깃발과 물음표 관리
 
 void OnLButtonDown(int a_mixed_key, POINT a_pos)
 {
