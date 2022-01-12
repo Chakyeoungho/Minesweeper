@@ -19,7 +19,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 void selectLvButton();    // 난이도 선택 버튼 생성
 void selectLevel(pGameData ap_data, unsigned int x, unsigned int y);    // 난이도 선택
 void drawBoard(pGameData ap_data);    // 보드판 그리기
-void randMine(pGameData ap_data);    // 랜덤으로 지뢰 생성
+void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
 void pluseMineNum(pGameData ap_data, int grid_size, int x_count, int y_count);    // 지뢰 주변 1씩 증가
 void clickBoard(pGameData ap_data, unsigned int x, unsigned int y);    // 판 클릭
 void openNothingClosed(pGameData ap_data, int x_count, int y_count, int x_num, int y_num);    // 연쇄적으로 판 오픈
@@ -31,7 +31,7 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 
 	if (a_mixed_key & MK_CONTROL) {
 		if (p_data->game_step == PLAYGAME) {
-			unsigned int x = (unsigned int)a_pos.x / p_data->gridSize[p_data->level - 1000], y = (unsigned int)a_pos.y / p_data->gridSize[p_data->level - 1000];
+			unsigned int x = a_pos.x / p_data->gridSize[p_data->level - 1000], y = a_pos.y / p_data->gridSize[p_data->level - 1000];
 			flagQuesBoard(p_data, x, y);
 		}
 	} else {
@@ -40,7 +40,7 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 		}
 		// 지뢰 타일 오픈
 		else if (p_data->game_step == PLAYGAME) {
-			unsigned int x = (unsigned int)a_pos.x / p_data->gridSize[p_data->level - 1000], y = (unsigned int)a_pos.y / p_data->gridSize[p_data->level - 1000];
+			unsigned int x = a_pos.x / p_data->gridSize[p_data->level - 1000], y = a_pos.y / p_data->gridSize[p_data->level - 1000];
 			clickBoard(p_data, x, y);
 		}
 	}
