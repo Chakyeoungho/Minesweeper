@@ -218,7 +218,7 @@ void openNothingClosed(pGameData ap_data, int x_pos, int y_pos)
 	for (int y = y_pos - 1; y <= y_pos + 1; y++) {
 		for (int x = x_pos - 1; x <= x_pos + 1; x++) {
 			if (y < 0 || x < 0 || x >= ap_data->x_count[ap_data->level - 1000] || y >= ap_data->y_count[ap_data->level - 1000] || ap_data->board_state[y][x] > mine_num8_closed)
-				continue;
+				continue;    // 범위를 벗어나거나 닫히지 않은 것들을 만나면 건너뛰기
 
 			ap_data->board_state[y][x] += 10;    // 10을 더해 열어준다
 
