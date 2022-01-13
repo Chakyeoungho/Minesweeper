@@ -121,7 +121,7 @@ void drawBoard(pGameData ap_data)
 		}
 	}
 
-	// 숫자 빈칸 등 출력
+	// 지뢰 개수, 빈칸, 깃발, 물음표 출력
 	for (unsigned int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 		for (unsigned int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
 			if (ap_data->board_state[y][x] >= mine_num1_open && ap_data->board_state[y][x] <= mine_num8_open)

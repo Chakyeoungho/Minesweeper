@@ -12,6 +12,7 @@
 *       19 : 지뢰 (타일 열림)
 *       20 : 깃발
 *       21 : 물음표
+*       22 : 깃발로 찾은 지뢰
 */
 enum boardState {
 	nothing_closed,
@@ -35,7 +36,8 @@ enum boardState {
 	mine_num8_open,
 	mine_open,
 	flag,
-	questionMark
+	questionMark,
+	mine_clear
 };
 
 // 게임 난이도
