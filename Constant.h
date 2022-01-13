@@ -24,7 +24,7 @@ enum boardState {
 	mine_num7_closed,
 	mine_num8_closed,
 	mine_closed,
-	nothing_open = 10,
+	nothing_open,
 	mine_num1_open,
 	mine_num2_open,
 	mine_num3_open,
@@ -34,7 +34,7 @@ enum boardState {
 	mine_num7_open,
 	mine_num8_open,
 	mine_open,
-	flag = 20,
+	flag,
 	questionMark
 };
 
