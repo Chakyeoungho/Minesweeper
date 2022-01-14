@@ -51,7 +51,16 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 		}
 	} else {    // 좌클릭만 눌렀을 때
 		// 게임 플레이 단계 | 지뢰 타일 오픈
-		if (p_data->game_step == PLAYGAME) {
+		if (a_pos.x >= 150 && a_pos.x <= 190 && a_pos.y >= 500 && a_pos.y <= 540) {
+			p_data->game_step = PLAYGAME;
+			memset(p_data, 0, sizeof(unsigned int) * 16 * 30 * 2);
+			p_data->currFlagNum = 0;
+			randMine(p_data);    // 지뢰 랜덤으로 생성
+			pluseMineNum(p_data, p_data->gridSize[p_data->level - 1000], p_data->x_count[p_data->level - 1000], p_data->y_count[p_data->level - 1000]);    // 지뢰 주변 1씩 증가
+			drawBoard(p_data);    // 판 그리기
+			p_data->start_time = GetTickCount64();
+		}
+		else if (p_data->game_step == PLAYGAME) {
 			unsigned int x = a_pos.x / p_data->gridSize[p_data->level - 1000], y = a_pos.y / p_data->gridSize[p_data->level - 1000];
 			clickBoard(p_data, x, y);
 		}
@@ -79,7 +88,7 @@ int main()
 
 	SelectFontObject("굴림", 20, 1);    // 글씨체와 크기 설정
 	selectLvButton();    // 난이도 선택 버튼 생성
-	
+
 	SetTimer(1, 1000, StopWatchProc);
 
 	ShowDisplay();    // 화면에 출력
@@ -143,7 +152,7 @@ void drawBoard(pGameData ap_data)
 		for (unsigned int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
 			if (ap_data->board_state[y][x] >= mine_num1_open && ap_data->board_state[y][x] <= mine_num8_open) {
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
-				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], WHITE, "%d", ap_data->board_state[y][x] - 10);				
+				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], WHITE, "%d", ap_data->board_state[y][x] - 10);
 			}
 			else if (ap_data->board_state[y][x] == nothing_open)
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
@@ -154,13 +163,16 @@ void drawBoard(pGameData ap_data)
 		}
 	}
 
-	for (unsigned int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
-		for (unsigned int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
-			if (ap_data->board_state[y][x] == mine_open)
-				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, BLACK);
+	if (ap_data->game_step == GAMEOVER) {
+		for (unsigned int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
+			for (unsigned int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
+				if (ap_data->board_state[y][x] == mine_closed)
+					Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, BLACK);
+			}
 		}
 	}
 
+	Rectangle(150, 500, 190, 540, ORANGE, ORANGE);
 	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);
 	TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);
 
@@ -193,7 +205,8 @@ void pluseMineNum(pGameData ap_data, int grid_size, int x_count, int y_count)
 		{
 			if (ap_data->board_state[i][j] == mine_closed) {
 				continue;    // 지뢰면 건너뛰기
-			} else {
+			}
+			else {
 				mine_num = 0;    // 주변 지뢰 개수 0으로 초기화
 				for (int y = i - 1; y <= i + 1; y++)
 				{
@@ -216,15 +229,11 @@ void clickBoard(pGameData ap_data, unsigned int x, unsigned int y)
 {
 	if (x < ap_data->x_count[ap_data->level - 1000] && y < ap_data->y_count[ap_data->level - 1000]) {
 		if (ap_data->board_state[y][x] == mine_closed) {    // 지뢰를 누르면 게임 오버, 지뢰 출력
-			for (unsigned int i = 0; i < ap_data->y_count[ap_data->level - 1000]; i++) {
-				for (unsigned int j = 0; j < ap_data->x_count[ap_data->level - 1000]; j++) {
-					if (ap_data->board_state[y][x] == mine_closed)
-						ap_data->board_state[y][x] += 10;
-				}
-			}
 			ap_data->game_step = GAMEOVER;
-		}    // 아무것도 없는 곳을 누르면 열기
-		else if (ap_data->board_state[y][x] == nothing_closed)
+		}
+		
+		// 아무것도 없는 곳을 누르면 열기
+		if (ap_data->board_state[y][x] == nothing_closed)
 			openNothingClosed(ap_data, x, y);    // 연쇄적으로 오픈
 		else if (ap_data->board_state[y][x] <= mine_num8_closed)
 			ap_data->board_state[y][x] += 10;    // 닫힌 숫자들에 10을 더해 열린 10으로 만듦
