@@ -76,10 +76,12 @@ enum boardState {
 #define BLACK  RGB(0, 0, 0)          // 검은색
 #define WHITE  RGB(255, 255, 255)    // 흰색
 #define ORANGE RGB(200, 150, 30)     // 주황색
+#define GRAY RGB(100, 100, 100)     // 회색
 
 // 현재 개임 스텝(난이도 선택화면, 게임 플레이 화면)
 #define SELECTLV 0    // 난이도 선택 화면
 #define PLAYGAME 1    // 게임중 화면
-#define GAMEOVER 2    // 게임 오버
+#define CLEARGME 2    // 게임 클리어
+#define GAMEOVER 3    // 게임 오버
 
 #endif // !__CONSTANT_H__

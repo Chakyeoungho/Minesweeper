@@ -12,8 +12,11 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	unsigned int x_count[3];     // x축 타일의 개수
 	unsigned int y_count[3];     // y축 타일의 개수
 	unsigned int mineNum[3];     // 지뢰의 개수
+	unsigned int currFlagNum;
 	int level;        // 선택한 난이도
 	int game_step;    // 현재 게임 단계
+	UINT64 start_time;    // 시작 시간
+	UINT64 curr_time;     // 현재 시간
 } GameData, *pGameData;
 
 void selectLvButton();    // 난이도 선택 버튼 생성
@@ -24,6 +27,17 @@ void pluseMineNum(pGameData ap_data, int grid_size, int x_count, int y_count);  
 void clickBoard(pGameData ap_data, unsigned int x, unsigned int y);    // 판 클릭
 void openNothingClosed(pGameData ap_data, int x_count, int y_count);    // 연쇄적으로 판 오픈
 void flagQuesBoard(pGameData ap_data, unsigned int x, unsigned int y);    // 깃발과 물음표 관리
+
+// 타이머가 1초마다 호출할 함수
+TIMER StopWatchProc(NOT_USE_TIMER_DATA)
+{
+	pGameData ap_data = (pGameData)GetAppData();
+
+	if (ap_data->game_step == PLAYGAME) {
+		ap_data->curr_time = GetTickCount64() - ap_data->start_time;
+		drawBoard(ap_data);
+	}
+}
 
 void OnLButtonDown(int a_mixed_key, POINT a_pos)
 {
@@ -44,6 +58,7 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 		// 난이도 선택 단계
 		else if (p_data->game_step == SELECTLV) {
 			selectLevel(p_data, a_pos.x, a_pos.y);
+			p_data->start_time = GetTickCount64();
 		}
 	}
 }
@@ -59,11 +74,13 @@ int main()
 					  {EASY_X_COUNT, NORMAL_X_COUNT, HARD_X_COUNT},          // x축 타일의 개수
 					  {EASY_Y_COUNT, NORMAL_Y_COUNT, HARD_Y_COUNT},          // y축 타일의 개수
 					  {EASY_MINE_NUM, NORMAL_MINE_NUM, HARD_MINE_NUM},       // 지뢰의 개수
-					  0, 0 };
+					  0, 0, 0, 0 };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 
 	SelectFontObject("굴림", 20, 1);    // 글씨체와 크기 설정
 	selectLvButton();    // 난이도 선택 버튼 생성
+	
+	SetTimer(1, 1000, StopWatchProc);
 
 	ShowDisplay();    // 화면에 출력
 	return 0;
@@ -124,10 +141,12 @@ void drawBoard(pGameData ap_data)
 	// 지뢰 개수, 빈칸, 깃발, 물음표 출력
 	for (unsigned int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 		for (unsigned int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
-			if (ap_data->board_state[y][x] >= mine_num1_open && ap_data->board_state[y][x] <= mine_num8_open)
-				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], WHITE, "%d", ap_data->board_state[y][x] - 10);
+			if (ap_data->board_state[y][x] >= mine_num1_open && ap_data->board_state[y][x] <= mine_num8_open) {
+				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
+				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], WHITE, "%d", ap_data->board_state[y][x] - 10);				
+			}
 			else if (ap_data->board_state[y][x] == nothing_open)
-				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(200, 100, 0), RGB(128, 0, 0));
+				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
 			else if (ap_data->board_state[y][x] == flag)
 				Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(200, 100, 0), RGB(128, 0, 0));
 			else if (ap_data->board_state[y][x] == questionMark)
@@ -141,6 +160,9 @@ void drawBoard(pGameData ap_data)
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, BLACK);
 		}
 	}
+
+	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);
+	TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);
 
 	ShowDisplay();
 }
@@ -237,9 +259,11 @@ void flagQuesBoard(pGameData ap_data, unsigned int x, unsigned int y)
 		if (ap_data->board_state[y][x] <= mine_closed) {    // 닫힌 칸에만 적용
 			ap_data->board_temp[y][x] = ap_data->board_state[y][x];    // 원래 상태를 임시 판에 저장
 			ap_data->board_state[y][x] = flag;    // 원래 상태를 깃발로 변경
+			ap_data->currFlagNum++;
 		}
 		else if (ap_data->board_state[y][x] == flag) {
 			ap_data->board_state[y][x] = questionMark;    // 깃발을 물음표로 변경
+			ap_data->currFlagNum--;
 		}
 		else if (ap_data->board_state[y][x] == questionMark) {
 			ap_data->board_state[y][x] = ap_data->board_temp[y][x];    // 물음표를 원래 상태로 변경
