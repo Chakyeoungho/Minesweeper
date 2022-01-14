@@ -143,7 +143,7 @@ void drawBoard(pGameData ap_data)
 	// 판 그리기
 	for (unsigned int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 		for (unsigned int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
-			Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(0, 100, 200), RGB(0, 0, 128));
+			Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(0, 0, 128), RGB(0, 100, 200));
 		}
 	}
 
