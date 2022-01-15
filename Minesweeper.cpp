@@ -6,13 +6,13 @@
 
 typedef struct _GameData // 게임 플레이중 필요한 데이터
 {
-	unsigned int board_state[HARD_Y_COUNT][HARD_X_COUNT];  // 가장 큰 사이즈의 보드만 있어도 모든 난이도의 게임을 만들 수 있다
-	unsigned int board_temp[HARD_Y_COUNT][HARD_X_COUNT];   // 깃발과 물음표를 사용할 때 원래 보드의 상태를 기억
-	unsigned int gridSize[3];    // 타일 하나의 크기 배열
-	unsigned int x_count[3];     // x축 타일의 개수
-	unsigned int y_count[3];     // y축 타일의 개수
-	unsigned int mineNum[3];     // 지뢰의 개수
-	unsigned int currFlagNum;
+	int board_state[HARD_Y_COUNT][HARD_X_COUNT];  // 가장 큰 사이즈의 보드만 있어도 모든 난이도의 게임을 만들 수 있다
+	int board_temp[HARD_Y_COUNT][HARD_X_COUNT];   // 깃발과 물음표를 사용할 때 원래 보드의 상태를 기억
+	int gridSize[3];    // 타일 하나의 크기 배열
+	int x_count[3];     // x축 타일의 개수
+	int y_count[3];     // y축 타일의 개수
+	int mineNum[3];     // 지뢰의 개수
+	int currFlagNum;
 	int level;        // 선택한 난이도
 	int game_step;    // 현재 게임 단계
 	UINT64 start_time;    // 시작 시간
@@ -20,13 +20,14 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 } GameData, *pGameData;
 
 void selectLvButton();    // 난이도 선택 버튼 생성
-void selectLevel(pGameData ap_data, unsigned int x, unsigned int y);    // 난이도 선택
+void selectLevel(pGameData ap_data, int x, int y);    // 난이도 선택
 void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
 void pluseMineNum(pGameData ap_data, int grid_size, int x_count, int y_count);    // 지뢰 주변 1씩 증가
-void clickBoard(pGameData ap_data, unsigned int x, unsigned int y);    // 판 클릭
+void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
 void openNothingClosed(pGameData ap_data, int x_count, int y_count);    // 연쇄적으로 판 오픈
-void flagQuesBoard(pGameData ap_data, unsigned int x, unsigned int y);    // 깃발과 물음표 관리
+void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
+void checkAndOpenRect(pGameData ap_data, int x, int y);    // 올바르게 깃발을 놓고 쉬프트와 좌클릭을 누르면 근처 8개의판이 열림
 
 // 타이머가 1초마다 호출할 함수
 TIMER StopWatchProc(NOT_USE_TIMER_DATA)
@@ -42,27 +43,31 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 void OnLButtonDown(int a_mixed_key, POINT a_pos)
 {
 	pGameData p_data = (pGameData)GetAppData();    // 내부변수 사용
+	int x = a_pos.x / p_data->gridSize[p_data->level - 1000], y = a_pos.y / p_data->gridSize[p_data->level - 1000];
 
 	// 컨트롤 키와 마우스 좌클릭을 동시에 눌렀을 때
 	if (a_mixed_key & MK_CONTROL) {
 		if (p_data->game_step == PLAYGAME) {
-			unsigned int x = a_pos.x / p_data->gridSize[p_data->level - 1000], y = a_pos.y / p_data->gridSize[p_data->level - 1000];
 			flagQuesBoard(p_data, x, y);
 		}
+	} else if (a_mixed_key & MK_SHIFT) {    // 쉬프트키와 좌믈릭을 동시에 눌렀을 때
+		if (p_data->board_state[y][x] >= nothing_open && p_data->board_state[y][x] <= mine_num8_open)
+			checkAndOpenRect(p_data, x, y);    // 지뢰를 깃발로 올바르게 찾았을 때 주변 8칸 오픈
 	} else {    // 좌클릭만 눌렀을 때
 		// 게임 플레이 단계 | 지뢰 타일 오픈
-		if (a_pos.x >= 150 && a_pos.x <= 190 && a_pos.y >= 500 && a_pos.y <= 540) {
-			p_data->game_step = PLAYGAME;
-			memset(p_data, 0, sizeof(unsigned int) * 16 * 30 * 2);
-			p_data->currFlagNum = 0;
-			randMine(p_data);    // 지뢰 랜덤으로 생성
-			pluseMineNum(p_data, p_data->gridSize[p_data->level - 1000], p_data->x_count[p_data->level - 1000], p_data->y_count[p_data->level - 1000]);    // 지뢰 주변 1씩 증가
-			drawBoard(p_data);    // 판 그리기
-			p_data->start_time = GetTickCount64();
-		}
-		else if (p_data->game_step == PLAYGAME) {
-			unsigned int x = a_pos.x / p_data->gridSize[p_data->level - 1000], y = a_pos.y / p_data->gridSize[p_data->level - 1000];
-			clickBoard(p_data, x, y);
+		if (p_data->game_step == PLAYGAME || p_data->game_step == GAMEOVER) {
+			if (a_pos.x >= 150 && a_pos.x <= 190 && a_pos.y >= 500 && a_pos.y <= 540) {
+				p_data->game_step = PLAYGAME;
+				memset(p_data, 0, sizeof(unsigned int) * 16 * 30 * 2);
+				p_data->currFlagNum = 0;
+				randMine(p_data);    // 지뢰 랜덤으로 생성
+				pluseMineNum(p_data, p_data->gridSize[p_data->level - 1000], p_data->x_count[p_data->level - 1000], p_data->y_count[p_data->level - 1000]);    // 지뢰 주변 1씩 증가
+				drawBoard(p_data);    // 판 그리기
+				p_data->start_time = GetTickCount64();
+			}
+			else if (p_data->game_step == PLAYGAME) {
+				clickBoard(p_data, x, y);
+			}
 		}
 		// 난이도 선택 단계
 		else if (p_data->game_step == SELECTLV) {
@@ -109,7 +114,7 @@ void selectLvButton()
 }
 
 // 난이도 선택
-void selectLevel(pGameData ap_data, unsigned int x, unsigned int y)
+void selectLevel(pGameData ap_data, int x, int y)
 {
 	// 좌클릭시 마우스의 좌표에 따라 난이도 조정
 	if (x >= 20 && x <= 108 && y >= 10 && y <= 38) {
@@ -141,15 +146,15 @@ void drawBoard(pGameData ap_data)
 	Clear();    // 화면 초기화
 
 	// 판 그리기
-	for (unsigned int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
-		for (unsigned int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
+	for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
+		for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
 			Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(0, 0, 128), RGB(0, 100, 200));
 		}
 	}
 
 	// 지뢰 개수, 빈칸, 깃발, 물음표 출력
-	for (unsigned int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
-		for (unsigned int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
+	for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
+		for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
 			if (ap_data->board_state[y][x] >= mine_num1_open && ap_data->board_state[y][x] <= mine_num8_open) {
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
 				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], WHITE, "%d", ap_data->board_state[y][x] - 10);
@@ -164,8 +169,8 @@ void drawBoard(pGameData ap_data)
 	}
 
 	if (ap_data->game_step == GAMEOVER) {
-		for (unsigned int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
-			for (unsigned int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
+		for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
+			for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
 				if (ap_data->board_state[y][x] == mine_closed)
 					Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, BLACK);
 			}
@@ -183,7 +188,7 @@ void drawBoard(pGameData ap_data)
 void randMine(pGameData ap_data)
 {
 	srand((unsigned int)time(NULL));    // 현재 시간을 시드값으로 설정
-	unsigned int tempX, tempY;    // 난수를 저장할 임시 변수
+	int tempX, tempY;    // 난수를 저장할 임시 변수
 	int tempMineNum = 0;    // 현재 생성된 지뢰 개수
 
 	while (tempMineNum != ap_data->mineNum[ap_data->level - 1000]) {    // 난이도에 따른 지뢰 개수만큼
@@ -225,7 +230,7 @@ void pluseMineNum(pGameData ap_data, int grid_size, int x_count, int y_count)
 }
 
 // 판 클릭시
-void clickBoard(pGameData ap_data, unsigned int x, unsigned int y)
+void clickBoard(pGameData ap_data, int x, int y)
 {
 	if (x < ap_data->x_count[ap_data->level - 1000] && y < ap_data->y_count[ap_data->level - 1000]) {
 		if (ap_data->board_state[y][x] == mine_closed) {    // 지뢰를 누르면 게임 오버, 지뢰 출력
@@ -262,7 +267,7 @@ void openNothingClosed(pGameData ap_data, int x_pos, int y_pos)
 }
 
 // 깃발과 물음표, 원래 상태를 토글
-void flagQuesBoard(pGameData ap_data, unsigned int x, unsigned int y)
+void flagQuesBoard(pGameData ap_data, int x, int y)
 {
 	if (x < ap_data->x_count[ap_data->level - 1000] && y < ap_data->y_count[ap_data->level - 1000]) {
 		if (ap_data->board_state[y][x] <= mine_closed) {    // 닫힌 칸에만 적용
@@ -279,5 +284,46 @@ void flagQuesBoard(pGameData ap_data, unsigned int x, unsigned int y)
 		}
 
 		drawBoard(ap_data);    // 판 그리기
+	}
+}
+
+// 올바르게 깃발을 놓고 쉬프트와 좌클릭을 누르면 근처 8개의판이 열림
+void checkAndOpenRect(pGameData ap_data, int x, int y)
+{
+	int rightMineNum = 0;
+	int flagNum = 0;
+	int mineNum = 0;
+
+	for (int i = y - 1; i <= y + 1; i++) {
+		for (int j = x - 1; j <= x + 1; j++) {
+			if (i < 0 || j < 0 || j >= ap_data->x_count[ap_data->level - 1000] || i >= ap_data->y_count[ap_data->level - 1000])
+				continue;
+
+			if (ap_data->board_state[i][j] == flag && ap_data->board_temp[i][j] == mine_closed)    // 깃발로 찾은 지뢰 개수
+				rightMineNum++;
+			if (ap_data->board_state[i][j] == mine_closed || ap_data->board_temp[i][j] == mine_closed)    // 지뢰 개수
+				mineNum++;
+			if (ap_data->board_state[i][j] == flag)    // 깃발 개수
+				flagNum++;
+		}
+	}
+	
+	if (rightMineNum == mineNum) {
+		for (int i = y - 1; i <= y + 1; i++) {
+			for (int j = x - 1; j <= x + 1; j++) {
+				if (i < 0 || j < 0 || j >= ap_data->x_count[ap_data->level - 1000] || i >= ap_data->y_count[ap_data->level - 1000] || 
+					(ap_data->board_state[i][j] >= nothing_open && ap_data->board_state[i][j] <= mine_num8_open))
+					continue;
+
+				if (ap_data->board_state[i][j] == nothing_closed)
+					openNothingClosed(ap_data, j, i);
+				else if (ap_data->board_state[i][j] >= mine_num1_closed && ap_data->board_temp[i][j] <= mine_num8_closed)
+					ap_data->board_state[i][j] += 10;
+			}
+		}
+		drawBoard(ap_data);
+	} else if (flagNum == mineNum) {
+		ap_data->game_step = GAMEOVER;
+		drawBoard(ap_data);
 	}
 }
