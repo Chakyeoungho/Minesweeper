@@ -23,7 +23,6 @@ void selectLvButton();    // 난이도 선택 버튼 생성
 void selectLevel(pGameData ap_data, int x, int y);    // 난이도 선택
 void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
-void pluseMineNum(pGameData ap_data, int grid_size, int x_count, int y_count);    // 지뢰 주변 1씩 증가
 void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
 void openNothingClosed(pGameData ap_data, int x_count, int y_count);    // 연쇄적으로 판 오픈
 void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
@@ -61,7 +60,6 @@ void OnLButtonDown(int a_mixed_key, POINT a_pos)
 				memset(p_data, 0, sizeof(unsigned int) * 16 * 30 * 2);
 				p_data->currFlagNum = 0;
 				randMine(p_data);    // 지뢰 랜덤으로 생성
-				pluseMineNum(p_data, p_data->gridSize[p_data->level - 1000], p_data->x_count[p_data->level - 1000], p_data->y_count[p_data->level - 1000]);    // 지뢰 주변 1씩 증가
 				drawBoard(p_data);    // 판 그리기
 				p_data->start_time = GetTickCount64();
 			}
@@ -120,21 +118,18 @@ void selectLevel(pGameData ap_data, int x, int y)
 	if (x >= 20 && x <= 108 && y >= 10 && y <= 38) {
 		ap_data->level = EASY;    // 선택한 난이도 저장
 		randMine(ap_data);    // 지뢰 랜덤으로 생성
-		pluseMineNum(ap_data, EASY_GRID_SIZE, EASY_X_COUNT, EASY_Y_COUNT);    // 지뢰 주변 1씩 증가
 		drawBoard(ap_data);    // 판 그리기
 		ap_data->game_step++;    // 다음단계로 이동
 	}
 	else if (x >= 120 && x <= 208 && y >= 10 && y <= 38) {
 		ap_data->level = NORMAL;
 		randMine(ap_data);
-		pluseMineNum(ap_data, NORMAL_GRID_SIZE, NORMAL_X_COUNT, NORMAL_Y_COUNT);
 		drawBoard(ap_data);
 		ap_data->game_step++;
 	}
 	else if (x >= 220 && x <= 308 && y >= 10 && y <= 38) {
 		ap_data->level = HARD;
 		randMine(ap_data);
-		pluseMineNum(ap_data, HARD_GRID_SIZE, HARD_X_COUNT, HARD_Y_COUNT);
 		drawBoard(ap_data);
 		ap_data->game_step++;
 	}
@@ -195,37 +190,20 @@ void randMine(pGameData ap_data)
 		if (ap_data->board_state[tempY = (rand() % ap_data->y_count[ap_data->level - 1000])][tempX = (rand() % ap_data->x_count[ap_data->level - 1000])] != mine_closed) {
 			ap_data->board_state[tempY][tempX] = mine_closed;    // 지뢰가 없으면 지뢰 생성
 			tempMineNum++;
+
+			for (int y = tempY - 1; y <= tempY + 1; y++) {
+				for (int x = tempX - 1; x <= tempX + 1; x++) {
+					if (y < 0 || x < 0 || x >= ap_data->x_count[ap_data->level - 1000] || y >= ap_data->y_count[ap_data->level - 1000] || ap_data->board_state[y][x] == mine_closed)
+						continue;
+					ap_data->board_state[y][x]++;
+				}
+			}
 		}
 	}
-}
 
-// 지뢰 주변 1씩 증가
-void pluseMineNum(pGameData ap_data, int grid_size, int x_count, int y_count)
-{
-	int mine_num;    // 주변 지뢰 개수
-
-	for (int i = 0; i < y_count; i++)
-	{
-		for (int j = 0; j < x_count; j++)
-		{
-			if (ap_data->board_state[i][j] == mine_closed) {
-				continue;    // 지뢰면 건너뛰기
-			}
-			else {
-				mine_num = 0;    // 주변 지뢰 개수 0으로 초기화
-				for (int y = i - 1; y <= i + 1; y++)
-				{
-					for (int x = j - 1; x <= j + 1; x++)
-					{
-						if (y < 0 || x < 0 || y >= y_count || x >= x_count)
-							continue;
-						else if (ap_data->board_state[y][x] == mine_closed)
-							mine_num += 1;    // 주변의 지뢰 개수만큼 증가
-					}
-				}
-				ap_data->board_state[i][j] = mine_num;    // 지뢰 개수 설정
-			}
-		}
+	if (tempMineNum > ap_data->mineNum[ap_data->level - 1000]) {
+		ap_data->game_step = GAMEOVER;
+		return;
 	}
 }
 
