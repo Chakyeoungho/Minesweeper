@@ -190,7 +190,7 @@ void randMine(pGameData ap_data)
 		if (ap_data->board_state[tempY = (rand() % ap_data->y_count[ap_data->level - 1000])][tempX = (rand() % ap_data->x_count[ap_data->level - 1000])] != mine_closed) {
 			ap_data->board_state[tempY][tempX] = mine_closed;    // 지뢰가 없으면 지뢰 생성
 			tempMineNum++;
-
+			
 			for (int y = tempY - 1; y <= tempY + 1; y++) {
 				for (int x = tempX - 1; x <= tempX + 1; x++) {
 					if (y < 0 || x < 0 || x >= ap_data->x_count[ap_data->level - 1000] || y >= ap_data->y_count[ap_data->level - 1000] || ap_data->board_state[y][x] == mine_closed)
