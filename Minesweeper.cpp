@@ -284,13 +284,11 @@ void flagQuesBoard(pGameData ap_data, int x_pos, int y_pos)
 	}
 }
 
-// XXX : mine_num1_open 에서 지뢰를 잘못 찾고 주위 8칸을 열려고 할 경우 오류가 발생
 // 올바르게 깃발을 놓고 쉬프트와 좌클릭을 누르면 근처 8개의판이 열림
 void checkAndOpenBoard(pGameData ap_data, int x, int y)
 {
 	int rightMineNum = 0;
 	int flagNum = 0;
-	int mineNum = 0;
 
 	for (int i = y - 1; i <= y + 1; i++) {
 		for (int j = x - 1; j <= x + 1; j++) {
@@ -299,14 +297,12 @@ void checkAndOpenBoard(pGameData ap_data, int x, int y)
 
 			if (ap_data->board_state[i][j] == flag && ap_data->board_temp[i][j] == mine_closed)    // 깃발로 찾은 지뢰 개수
 				rightMineNum++;
-			if (ap_data->board_state[i][j] == mine_closed || ap_data->board_temp[i][j] == mine_closed)    // 지뢰 개수
-				mineNum++;
 			if (ap_data->board_state[i][j] == flag)    // 깃발 개수
 				flagNum++;
 		}
 	}
 
-	if (rightMineNum == mineNum) {
+	if (flagNum == ap_data->board_state[y][x] - 10 && rightMineNum == ap_data->board_state[y][x] - 10) {
 		for (int i = y - 1; i <= y + 1; i++) {
 			for (int j = x - 1; j <= x + 1; j++) {
 				if (i < 0 || j < 0 || j >= ap_data->x_count[ap_data->level - 1000] || i >= ap_data->y_count[ap_data->level - 1000] ||
@@ -321,7 +317,7 @@ void checkAndOpenBoard(pGameData ap_data, int x, int y)
 		}
 		drawBoard(ap_data);
 	}
-	else if (flagNum == mineNum) {
+	else if (flagNum == ap_data->board_state[y][x] - 10) {
 		ap_data->game_step = GAMEOVER;
 		drawBoard(ap_data);
 	}
