@@ -19,14 +19,16 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	UINT64 curr_time;     // 현재 시간
 } GameData, *pGameData;
 
+POINT ptMouse;    // 마우스 클릭시 좌표를 받을 전역변수
+
 void selectLvButton();    // 난이도 선택 버튼 생성
 void selectLevel(pGameData ap_data, int x, int y);    // 난이도 선택
 void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
 void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
 void openNothingClosed(pGameData ap_data, int x_count, int y_count);    // 연쇄적으로 판 오픈
-void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
-void checkAndOpenRect(pGameData ap_data, int x, int y);    // 올바르게 깃발을 놓고 쉬프트와 좌클릭을 누르면 근처 8개의판이 열림
+void flagQuesBoard(pGameData ap_data, int x_pos, int y_pos);    // 깃발과 물음표 관리
+void checkAndOpenBoard(pGameData ap_data, int x, int y);    // 올바르게 깃발을 놓고 쉬프트와 좌클릭을 누르면 근처 8개의판이 열림
 
 // 타이머가 1초마다 호출할 함수
 TIMER StopWatchProc(NOT_USE_TIMER_DATA)
@@ -39,44 +41,60 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 	}
 }
 
-void OnLButtonDown(int a_mixed_key, POINT a_pos)
+// 마우스 왼쪽 버튼을 눌렀을 때 호출될 함수
+void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 {
-	pGameData p_data = (pGameData)GetAppData();    // 내부변수 사용
+	pGameData p_data = (pGameData)GetAppData();
 	int x = a_pos.x / p_data->gridSize[p_data->level - 1000], y = a_pos.y / p_data->gridSize[p_data->level - 1000];
 
-	// 컨트롤 키와 마우스 좌클릭을 동시에 눌렀을 때
-	if (a_mixed_key & MK_CONTROL) {
-		if (p_data->game_step == PLAYGAME) {
-			flagQuesBoard(p_data, x, y);
-		}
-	} else if (a_mixed_key & MK_SHIFT) {    // 쉬프트키와 좌믈릭을 동시에 눌렀을 때
-		if (p_data->board_state[y][x] >= nothing_open && p_data->board_state[y][x] <= mine_num8_open)
-			checkAndOpenRect(p_data, x, y);    // 지뢰를 깃발로 올바르게 찾았을 때 주변 8칸 오픈
-	} else {    // 좌클릭만 눌렀을 때
-		// 게임 플레이 단계 | 지뢰 타일 오픈
-		if (p_data->game_step == PLAYGAME || p_data->game_step == GAMEOVER) {
-			if (a_pos.x >= 150 && a_pos.x <= 190 && a_pos.y >= 500 && a_pos.y <= 540) {
-				p_data->game_step = PLAYGAME;
-				memset(p_data, 0, sizeof(unsigned int) * 16 * 30 * 2);
-				p_data->currFlagNum = 0;
-				randMine(p_data);    // 지뢰 랜덤으로 생성
-				drawBoard(p_data);    // 판 그리기
-				p_data->start_time = GetTickCount64();
-			}
-			else if (p_data->game_step == PLAYGAME) {
-				clickBoard(p_data, x, y);
-			}
-		}
-		// 난이도 선택 단계
-		else if (p_data->game_step == SELECTLV) {
-			selectLevel(p_data, a_pos.x, a_pos.y);
+	// 좌클릭만 눌렀을 때
+	// 게임 플레이 단계 | 지뢰 타일 오픈
+	if (p_data->game_step == PLAYGAME || p_data->game_step == GAMEOVER) {
+		if (a_pos.x >= 150 && a_pos.x <= 190 && a_pos.y >= 500 && a_pos.y <= 540) {
+			p_data->game_step = PLAYGAME;
+			memset(p_data, 0, sizeof(unsigned int) * 16 * 30 * 2);
+			p_data->currFlagNum = 0;
+			randMine(p_data);    // 지뢰 랜덤으로 생성
+			drawBoard(p_data);    // 판 그리기
 			p_data->start_time = GetTickCount64();
 		}
+		else if (p_data->game_step == PLAYGAME) {
+			clickBoard(p_data, x, y);
+		}
+	}
+	// 난이도 선택 단계
+	else if (p_data->game_step == SELECTLV) {
+		selectLevel(p_data, a_pos.x, a_pos.y);
+		p_data->start_time = GetTickCount64();
 	}
 }
 
-// 마우스 메시지 눌렀을때만 사용
-MOUSE_MESSAGE(OnLButtonDown, NULL, NULL)
+// 마우스 왼쪽 버튼은 자주 사용하기 때문에 EasyWin32 시스템이 기본으로 제공하지만 오른쪽 버튼은 
+// 제공되지 않아서 메시지를 직접 처리해야 합니다. 그래서 사용자가 직접 메시지를 처리하기 위해 함수를 추가함
+int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
+{
+	pGameData p_data = (pGameData)GetAppData();
+	GetCursorPos(&ptMouse);    // 마우스 커서의 좌표 가져오기
+	ScreenToClient(ah_wnd, &ptMouse);    // 좌표의 기준을 창으로 변경
+
+	if (a_message_id == WM_MBUTTONUP) {
+		if (p_data->board_state[ptMouse.y / p_data->gridSize[p_data->level - 1000]][ptMouse.x / p_data->gridSize[p_data->level - 1000]] >= nothing_open &&
+			p_data->board_state[ptMouse.y / p_data->gridSize[p_data->level - 1000]][ptMouse.x / p_data->gridSize[p_data->level - 1000]] <= mine_num8_open) {
+			checkAndOpenBoard(p_data, ptMouse.x / p_data->gridSize[p_data->level - 1000], ptMouse.y / p_data->gridSize[p_data->level - 1000]);    // 지뢰를 깃발로 올바르게 찾았을 때 주변 8칸 오픈
+		}
+	}
+	// 마우스 오른쪽 버튼이 눌러진 경우에 처리
+	else if (a_message_id == WM_RBUTTONUP) {
+		if (p_data->game_step == PLAYGAME) {
+			flagQuesBoard(p_data, ptMouse.x, ptMouse.y);
+		}
+		return 1;
+	}
+	return 0;
+}
+
+// 마우스 왼쪽 버튼을 클릭, 해제 그리고 시스템이 기본으로 처리하지 않는 메시지를 처리하는 함수
+ON_MESSAGE(NULL, OnMouseLeftUP, NULL, NULL, NULL, OnUserMsg)
 
 int main()
 {
@@ -245,8 +263,10 @@ void openNothingClosed(pGameData ap_data, int x_pos, int y_pos)
 }
 
 // 깃발과 물음표, 원래 상태를 토글
-void flagQuesBoard(pGameData ap_data, int x, int y)
+void flagQuesBoard(pGameData ap_data, int x_pos, int y_pos)
 {
+	int x = x_pos / ap_data->gridSize[ap_data->level - 1000], y = y_pos / ap_data->gridSize[ap_data->level - 1000];
+
 	if (x < ap_data->x_count[ap_data->level - 1000] && y < ap_data->y_count[ap_data->level - 1000]) {
 		if (ap_data->board_state[y][x] <= mine_closed) {    // 닫힌 칸에만 적용
 			ap_data->board_temp[y][x] = ap_data->board_state[y][x];    // 원래 상태를 임시 판에 저장
@@ -266,7 +286,7 @@ void flagQuesBoard(pGameData ap_data, int x, int y)
 }
 
 // 올바르게 깃발을 놓고 쉬프트와 좌클릭을 누르면 근처 8개의판이 열림
-void checkAndOpenRect(pGameData ap_data, int x, int y)
+void checkAndOpenBoard(pGameData ap_data, int x, int y)
 {
 	int rightMineNum = 0;
 	int flagNum = 0;
