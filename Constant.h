@@ -68,17 +68,13 @@ enum boardState {
 #define NORMAL_MINE_NUM 40    // 보통 난이도 총 지뢰 개수
 #define HARD_MINE_NUM   99    // 어려움 난이도 총 지뢰 개수
 
-// 마우스 클릭 상태
-#define LBUTTON 100    // 왼쪽 클릭
-#define RBUTTON 101    // 오른쪽 클릭
-
 // 자주 사용하는 색상
 #define BLACK  RGB(0, 0, 0)          // 검은색
 #define WHITE  RGB(255, 255, 255)    // 흰색
 #define ORANGE RGB(200, 150, 30)     // 주황색
 #define GRAY   RGB(100, 100, 100)    // 회색
 
-// 현재 개임 스텝(난이도 선택화면, 게임 플레이 화면)
+// 현재 개임 스텝
 #define SELECTLV 0    // 난이도 선택 화면
 #define PLAYGAME 1    // 게임중 화면
 #define CLEARGME 2    // 게임 클리어
