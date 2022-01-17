@@ -95,6 +95,9 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 		if (p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] >= nothing_open &&
 			p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] <= mine_num8_open) {
 			checkAndOpenBoard(p_data, x_pos / p_data->gridSize[p_data->level - 1000], y_pos / p_data->gridSize[p_data->level - 1000]);    // 지뢰를 깃발로 올바르게 찾았을 때 주변 8칸 오픈
+
+			checkClear(p_data);    // 클리어 체크
+			drawBoard(p_data);
 		}
 	}
 	// 마우스 오른쪽 버튼이 눌러진 경우에 처리
