@@ -25,6 +25,7 @@ void selectLevel(pGameData ap_data, int x, int y);    // 난이도 선택
 void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
 void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
+void checkClear(pGameData ap_data);
 void openNothingClosed(pGameData ap_data, int x_count, int y_count);    // 연쇄적으로 판 오픈
 void flagQuesBoard(pGameData ap_data, int x_pos, int y_pos);    // 깃발과 물음표 관리
 void checkAndOpenBoard(pGameData ap_data, int x, int y);    // 올바르게 깃발을 놓고 쉬프트와 좌클릭을 누르면 근처 8개의판이 열림
@@ -60,7 +61,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 
 	// 좌클릭만 눌렀을 때
 	// 게임 플레이 단계 | 지뢰 타일 오픈
-	if (p_data->game_step == PLAYGAME || p_data->game_step == GAMEOVER) {
+	if (p_data->game_step == PLAYGAME || p_data->game_step == GAMEOVER || p_data->game_step == CLEARGME) {
 		if (a_pos.x >= 150 && a_pos.x <= 190 && a_pos.y >= 500 && a_pos.y <= 540) {
 			p_data->game_step = PLAYGAME;
 			memset(p_data, 0, sizeof(unsigned int) * 16 * 30 * 2);
@@ -171,6 +172,8 @@ void selectLevel(pGameData ap_data, int x, int y)
 void drawBoard(pGameData ap_data)
 {
 	Clear();    // 화면 초기화
+	
+
 
 	// 판 그리기
 	for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
@@ -205,6 +208,30 @@ void drawBoard(pGameData ap_data)
 					Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, BLACK);
 			}
 		}
+
+		TextOut(400, 500, RGB(255, 0, 0), "Game Over!");
+		Rectangle(150, 500, 190, 540, ORANGE, ORANGE);
+		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);
+		TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);
+
+		ShowDisplay();
+		return;
+	}
+
+	if (ap_data->game_step == CLEARGME) {
+		ap_data->curr_time = GetTickCount64() - ap_data->start_time;
+		UINT64 minute = ap_data->curr_time / 60000;
+		UINT64 sec = (ap_data->curr_time % 60000) / 1000;
+		UINT64 mSec = ap_data->curr_time % 1000;
+
+		TextOut(400, 500, RGB(100, 255, 100), "Game Clear!");
+		TextOut(550, 500, BLACK, "Time : %02llu'%02llu\"%03llu", minute, sec, mSec);
+		Rectangle(150, 500, 190, 540, ORANGE, ORANGE);
+		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);
+		TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);
+
+		ShowDisplay();
+		return;
 	}
 
 	Rectangle(150, 500, 190, 540, ORANGE, ORANGE);
@@ -242,17 +269,36 @@ void randMine(pGameData ap_data)
 void clickBoard(pGameData ap_data, int x, int y)
 {
 	if (x < ap_data->x_count[ap_data->level - 1000] && y < ap_data->y_count[ap_data->level - 1000]) {
-		if (ap_data->board_state[y][x] == mine_closed) {    // 지뢰를 누르면 게임 오버, 지뢰 출력
+		if (ap_data->board_state[y][x] == mine_closed)    // 지뢰를 누르면 게임 오버, 지뢰 출력
 			ap_data->game_step = GAMEOVER;
-		}
 
 		// 아무것도 없는 곳을 누르면 열기
 		if (ap_data->board_state[y][x] == nothing_closed)
 			openNothingClosed(ap_data, x, y);    // 연쇄적으로 오픈
 		else if (ap_data->board_state[y][x] <= mine_num8_closed)
 			ap_data->board_state[y][x] += 10;    // 닫힌 숫자들에 10을 더해 열린 10으로 만듦
+
+		checkClear(ap_data);    // 클리어 체크
 	}
 	drawBoard(ap_data);    // 판 그리기
+}
+
+// 게임 클리어 여부 확인
+void checkClear(pGameData ap_data)
+{
+	int closedTile = 0;
+
+	if (ap_data->game_step == PLAYGAME) {
+		for (int i = 0; i < ap_data->y_count[ap_data->level - 1000]; i++) {
+			for (int j = 0; j < ap_data->x_count[ap_data->level - 1000]; j++) {
+				if (ap_data->board_state[i][j] <= 9 || (ap_data->board_state[i][j] == flag && ap_data->board_temp[i][j] == mine_closed))
+					closedTile++;
+			}
+		}
+
+		if (closedTile == ap_data->mineNum[ap_data->level - 1000])
+			ap_data->game_step = CLEARGME;
+	}
 }
 
 // 아무것도 없는 판을 연쇄적으로 열기
@@ -284,6 +330,8 @@ void flagQuesBoard(pGameData ap_data, int x_pos, int y_pos)
 			ap_data->board_temp[y][x] = ap_data->board_state[y][x];    // 원래 상태를 임시 판에 저장
 			ap_data->board_state[y][x] = flag;    // 원래 상태를 깃발로 변경
 			ap_data->currFlagNum++;
+
+			checkClear(ap_data);    // 클리어 체크
 		}
 		else if (ap_data->board_state[y][x] == flag) {
 			ap_data->board_state[y][x] = questionMark;    // 깃발을 물음표로 변경
