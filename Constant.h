@@ -80,6 +80,4 @@ enum boardState {
 #define CLEARGME 2    // 게임 클리어
 #define GAMEOVER 3    // 게임 오버
 
-#define CLICK 32    // 클릭 상태
-
 #endif // !__CONSTANT_H__

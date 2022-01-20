@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "tipsware.h"
 #include "Constant.h"    // 필요한 상수를 모아놓은 헤더파일
+#include <Windowsx.h>
 #include <stdlib.h>      // srand()와 rand()를 사용하기 위한 헤더파일
 #include <time.h>        // 난수의 시드값을 설정하기 위한 헤더파일
 
@@ -18,8 +19,10 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	UINT64 start_time;    // 시작 시간
 	UINT64 curr_time;     // 현재 시간
 	POINT temp_pos;       // 임시 커서 좌표
+	char isCursorOutTile;    // 커서가 누른 타일을 벗어났는지 확인
 } GameData, *pGameData;
 
+void setGameData(pGameData data);
 void selectLvButton();    // 난이도 선택 버튼 생성
 void selectLevel(pGameData ap_data, int x, int y);    // 난이도 선택
 void drawBoard(pGameData ap_data);    // 보드판 그리기
@@ -44,13 +47,8 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 {
 	pGameData p_data = (pGameData)GetAppData();
-	int x = a_pos.x / p_data->gridSize[p_data->level - 1000], y = a_pos.y / p_data->gridSize[p_data->level - 1000];
 
-	if (p_data->game_step == PLAYGAME && p_data->board_state[y][x] != flag && p_data->board_state[y][x] != questionMark && p_data->board_state[y][x] < 10) {
-		p_data->temp_pos = a_pos;
-		p_data->board_temp[y][x] = CLICK;
-		drawBoard(p_data);
-	}
+	p_data->temp_pos = a_pos;
 }
 
 // 마우스 왼쪽 버튼을 땠을 때 호출될 함수
@@ -61,24 +59,26 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 
 	// 좌클릭만 눌렀을 때
 	// 게임 플레이 단계 | 지뢰 타일 오픈
-	if (p_data->game_step == PLAYGAME || p_data->game_step == GAMEOVER || p_data->game_step == CLEARGME) {
-		if (a_pos.x >= 150 && a_pos.x <= 190 && a_pos.y >= 500 && a_pos.y <= 540) {
-			p_data->game_step = PLAYGAME;
-			memset(p_data, 0, sizeof(unsigned int) * 16 * 30 * 2);
-			p_data->currFlagNum = 0;
-			randMine(p_data);    // 지뢰 랜덤으로 생성
-			drawBoard(p_data);    // 판 그리기
+	if (x == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] && y == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
+		if (p_data->game_step == PLAYGAME || p_data->game_step == GAMEOVER || p_data->game_step == CLEARGME) {
+			if (a_pos.x >= 150 && a_pos.x <= 190 && a_pos.y >= 500 && a_pos.y <= 540) {
+				p_data->game_step = PLAYGAME;
+				memset(p_data, 0, sizeof(unsigned int) * 16 * 30 * 2);
+				p_data->currFlagNum = 0;
+				randMine(p_data);    // 지뢰 랜덤으로 생성
+				drawBoard(p_data);    // 판 그리기
+				p_data->start_time = GetTickCount64();
+			}
+			else if (p_data->game_step == PLAYGAME) {    // 좌클릭으로 판 열기
+				p_data->board_temp[p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]][p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000]] = 0;
+				clickBoard(p_data, x, y);
+			}
+		}
+		// 난이도 선택 단계
+		else if (p_data->game_step == SELECTLV) {
+			selectLevel(p_data, a_pos.x, a_pos.y);
 			p_data->start_time = GetTickCount64();
 		}
-		else if (p_data->game_step == PLAYGAME) {    // 좌클릭으로 판 열기
-			p_data->board_temp[p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]][p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000]] = 0;
-			clickBoard(p_data, x, y);
-		}
-	}
-	// 난이도 선택 단계
-	else if (p_data->game_step == SELECTLV) {
-		selectLevel(p_data, a_pos.x, a_pos.y);
-		p_data->start_time = GetTickCount64();
 	}
 }
 
@@ -88,8 +88,8 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 {
 	pGameData p_data = (pGameData)GetAppData();
 
-	int x_pos = LOWORD(lParam);
-	int y_pos = HIWORD(lParam);
+	int x_pos = GET_X_LPARAM(lParam);
+	int y_pos = GET_Y_LPARAM(lParam);
 
 	if (a_message_id == WM_MBUTTONUP || a_message_id == WM_LBUTTONDBLCLK || wParam == 3) {
 		if (p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] >= nothing_open &&
@@ -101,12 +101,31 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 		}
 	}
 	// 마우스 오른쪽 버튼이 눌러진 경우에 처리
-	else if (a_message_id == WM_RBUTTONUP) {
-		if (p_data->game_step == PLAYGAME) {
-			flagQuesBoard(p_data, x_pos, y_pos);
+	else {
+		if (a_message_id == WM_RBUTTONDOWN) {
+			p_data->temp_pos.x = x_pos;
+			p_data->temp_pos.y = y_pos;
+
+			drawBoard(p_data);
+			Rectangle((x_pos - 1) / p_data->gridSize[p_data->level - 1000], (y_pos - 1) / p_data->gridSize[p_data->level - 1000], x_pos / p_data->gridSize[p_data->level - 1000], y_pos / p_data->gridSize[p_data->level - 1000], RGB(0, 100, 200), RGB(0, 0, 128));
+			ShowDisplay();
 		}
-		return 1;
+		else if (a_message_id == WM_RBUTTONUP) {
+			if (x_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] && y_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
+				if (p_data->game_step == PLAYGAME) {
+					flagQuesBoard(p_data, x_pos, y_pos);
+				}
+			}
+
+			return 1;
+		}
 	}
+
+	if (a_message_id == WM_MOUSEMOVE && wParam == MK_RBUTTON) {
+		LineTo(x_pos, y_pos);
+		ShowDisplay();
+	}
+
 	return 0;
 }
 
@@ -115,13 +134,8 @@ ON_MESSAGE(OnMouseLeftDOWN, OnMouseLeftUP, NULL, NULL, NULL, OnUserMsg)
 
 int main()
 {
-	GameData data = { { { 0, }, },    // 판 상태
-					  { { 0, }, },    // 깃발과 물음표를 제외한 판 상태
-					  {EASY_GRID_SIZE, NORMAL_GRID_SIZE, HARD_GRID_SIZE},    // 타일 하나의 크기 배열
-					  {EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT  },    // x축 타일의 개수
-					  {EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT  },    // y축 타일의 개수
-					  {EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM },    // 지뢰의 개수
-					  0, 0, 0, 0 };
+	GameData data;
+	setGameData(&data);
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 
 	SelectFontObject("굴림", 20, 1);    // 글씨체와 크기 설정
@@ -134,9 +148,22 @@ int main()
 	return 0;
 }
 
+void setGameData(pGameData data)
+{
+	*data = { { { 0, }, },    // 판 상태
+			  { { 0, }, },    // 깃발과 물음표를 제외한 판 상태
+			  {EASY_GRID_SIZE, NORMAL_GRID_SIZE, HARD_GRID_SIZE},    // 타일 하나의 크기 배열
+			  {EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT  },    // x축 타일의 개수
+			  {EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT  },    // y축 타일의 개수
+			  {EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM },    // 지뢰의 개수
+			  0, 0, 0, 0, 0 };
+}
+
 // 난이도 선택 버튼 생성
 void selectLvButton()
 {
+	Clear();
+
 	Rectangle(20, 10, 108, 38, ORANGE, ORANGE);     // 쉬움lv
 	TextOut(43, 13, BLACK, "쉬움");
 
@@ -145,6 +172,8 @@ void selectLvButton()
 
 	Rectangle(220, 10, 308, 38, ORANGE, ORANGE);    // 어려움lv
 	TextOut(233, 13, BLACK, "어려움");
+
+	ShowDisplay();
 }
 
 // 난이도 선택
@@ -188,10 +217,7 @@ void drawBoard(pGameData ap_data)
 	// 지뢰 개수, 빈칸, 깃발, 물음표 출력
 	for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 		for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
-			if (ap_data->board_temp[y][x] == CLICK && ap_data->board_state[y][x] < 10) {
-				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(0, 100, 200), RGB(0, 0, 128));
-			}
-			else if (ap_data->board_state[y][x] >= mine_num1_open && ap_data->board_state[y][x] <= mine_num8_open) {
+			if (ap_data->board_state[y][x] >= mine_num1_open && ap_data->board_state[y][x] <= mine_num8_open) {
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
 				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], WHITE, "%d", ap_data->board_state[y][x] - 10);
 			}
@@ -213,28 +239,15 @@ void drawBoard(pGameData ap_data)
 		}
 
 		TextOut(400, 500, RGB(255, 0, 0), "Game Over!");
-		Rectangle(150, 500, 190, 540, ORANGE, ORANGE);
-		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);
-		TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);
-
-		ShowDisplay();
-		return;
 	}
 
 	if (ap_data->game_step == CLEARGME) {
-		ap_data->curr_time = GetTickCount64() - ap_data->start_time;
 		UINT64 minute = ap_data->curr_time / 60000;
 		UINT64 sec = (ap_data->curr_time % 60000) / 1000;
 		UINT64 mSec = ap_data->curr_time % 1000;
 
 		TextOut(400, 500, RGB(100, 255, 100), "Game Clear!");
 		TextOut(550, 500, BLACK, "Time : %02llu'%02llu\"%03llu", minute, sec, mSec);
-		Rectangle(150, 500, 190, 540, ORANGE, ORANGE);
-		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);
-		TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);
-
-		ShowDisplay();
-		return;
 	}
 
 	Rectangle(150, 500, 190, 540, ORANGE, ORANGE);
@@ -280,10 +293,9 @@ void clickBoard(pGameData ap_data, int x, int y)
 			openNothingClosed(ap_data, x, y);    // 연쇄적으로 오픈
 		else if (ap_data->board_state[y][x] <= mine_num8_closed)
 			ap_data->board_state[y][x] += 10;    // 닫힌 숫자들에 10을 더해 열린 10으로 만듦
-
-		checkClear(ap_data);    // 클리어 체크
 	}
-	drawBoard(ap_data);    // 판 그리기
+
+	checkClear(ap_data);    // 클리어 체크
 }
 
 // 게임 클리어 여부 확인
@@ -294,7 +306,7 @@ void checkClear(pGameData ap_data)
 	if (ap_data->game_step == PLAYGAME) {
 		for (int i = 0; i < ap_data->y_count[ap_data->level - 1000]; i++) {
 			for (int j = 0; j < ap_data->x_count[ap_data->level - 1000]; j++) {
-				if (ap_data->board_state[i][j] <= 9 || (ap_data->board_state[i][j] == flag && ap_data->board_temp[i][j] == mine_closed))
+				if (ap_data->board_state[i][j] <= 9 || ap_data->board_state[i][j] == flag || ap_data->board_state[i][j] == questionMark)
 					closedTile++;
 			}
 		}
@@ -302,6 +314,8 @@ void checkClear(pGameData ap_data)
 		if (closedTile == ap_data->mineNum[ap_data->level - 1000])
 			ap_data->game_step = CLEARGME;
 	}
+
+	drawBoard(ap_data);
 }
 
 // 아무것도 없는 판을 연쇄적으로 열기
@@ -379,10 +393,10 @@ void checkAndOpenBoard(pGameData ap_data, int x, int y)
 					ap_data->board_state[i][j] += 10;
 			}
 		}
-		drawBoard(ap_data);
 	}
 	else if (flagNum == ap_data->board_state[y][x] - 10) {
 		ap_data->game_step = GAMEOVER;
-		drawBoard(ap_data);
 	}
+
+	drawBoard(ap_data);
 }
