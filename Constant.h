@@ -80,4 +80,8 @@ enum boardState {
 #define CLEARGME 2    // 게임 클리어
 #define GAMEOVER 3    // 게임 오버
 
+#define LBUTTON 100    // 마우스 왼쪽 클릭
+#define RBUTTON 101    // 마우스 오른쪽 클릭
+#define BBUTTON 102    // 마우스 양쪽 클릭
+
 #endif // !__CONSTANT_H__
