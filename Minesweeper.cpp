@@ -23,7 +23,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 
 void selectLvButton();    // 난이도 선택 버튼 생성
 void selectLevel(pGameData ap_data, int x, int y);    // 난이도 선택
-void resetClickState(pGameData ap_data);
+void resetClickState(pGameData ap_data);    // 클릭 상태 초기화
 void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
 void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
