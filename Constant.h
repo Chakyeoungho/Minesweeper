@@ -2,7 +2,7 @@
 #define __CONSTANT_H__
 
 /*
-*        < 보드판 상태 >
+*       < 보드판 상태 >
 * 
 *        0 : 아무것도 없음 (타일 닫힘)
 *    1 ~ 8 : 주변 지뢰의 개수 (타일 닫힘)
@@ -24,7 +24,7 @@ enum boardState {
 	mine_num6_closed,
 	mine_num7_closed,
 	mine_num8_closed,
-	mine_closed,
+	mine,
 	nothing_open,
 	mine_num1_open,
 	mine_num2_open,
@@ -34,10 +34,8 @@ enum boardState {
 	mine_num6_open,
 	mine_num7_open,
 	mine_num8_open,
-	mine_open,
 	flag,
-	questionMark,
-	mine_clear
+	questionMark
 };
 
 // 게임 난이도
@@ -80,8 +78,8 @@ enum boardState {
 #define CLEARGME 2    // 게임 클리어
 #define GAMEOVER 3    // 게임 오버
 
-#define CLICKED 100    // 마우스 왼쪽 클릭
-
+// 마우스 클릭 상태
 #define BOTHCLICK 64    // 마우스 양쪽, 휠, 더블클릭 확인
+#define CLICKED 100    // 마우스 왼쪽 클릭
 
 #endif // !__CONSTANT_H__
