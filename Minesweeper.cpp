@@ -69,11 +69,11 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 	// 다시 시작 버튼 클릭
 	else if (a_pos.x >= 150 && a_pos.x <= 190 && a_pos.y >= 500 && a_pos.y <= 540) {
 		p_data->game_step = PLAYGAME;
-		memset(p_data, 0, sizeof(unsigned int) * 16 * 30 * 2);
-		p_data->currFlagNum = 0;
+		memset(p_data, 0, sizeof(unsigned int) * 16 * 30 * 2);    // 게임정보 초기화
+		p_data->currFlagNum = 0;    // 게임정보 초기화
 		randMine(p_data);    // 지뢰 랜덤으로 생성
 		drawBoard(p_data);    // 판 그리기
-		p_data->start_time = GetTickCount64();
+		p_data->start_time = GetTickCount64();    // 시간 초기화
 	}
 	// 게임 플레이 단계 | 지뢰 타일 오픈
 	else if (p_data->game_step == PLAYGAME) {
@@ -259,18 +259,28 @@ void drawBoard(pGameData ap_data)
 	// 지뢰 개수, 빈칸, 깃발, 물음표 출력
 	for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 		for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
-			if (ap_data->click_state[y][x] == CLICKED)
+			if (ap_data->click_state[y][x] == CLICKED)    // 클릭된 타일
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(0, 100, 200), RGB(0, 0, 128));
-			else if (ap_data->board_state[y][x] >= mine_num1_open && ap_data->board_state[y][x] <= mine_num8_open) {
+
+			switch (ap_data->board_state[y][x]) {
+			case nothing_open:
+				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
+				break;
+			case mine_num1_open: case mine_num2_open: case mine_num3_open:
+			case mine_num4_open:					  case mine_num5_open:
+			case mine_num6_open: case mine_num7_open: case mine_num8_open:
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
 				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], WHITE, "%d", ap_data->board_state[y][x] - 10);
-			}
-			else if (ap_data->board_state[y][x] == nothing_open)
-				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
-			else if (ap_data->board_state[y][x] == flag)
+				break;
+			case flag:
 				Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(200, 100, 0), RGB(128, 0, 0));
-			else if (ap_data->board_state[y][x] == questionMark)
+				break;
+			case questionMark:
 				Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], WHITE, BLACK);
+				break;
+			default:
+				break;
+			}
 		}
 	}
 	
@@ -294,9 +304,9 @@ void drawBoard(pGameData ap_data)
 		TextOut(550, 500, BLACK, "Time : %02llu'%02llu\"%03llu", minute, sec, mSec);
 	}
 
-	Rectangle(150, 500, 190, 540, ORANGE, ORANGE);
-	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);
-	TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);
+	Rectangle(150, 500, 190, 540, ORANGE, ORANGE);    // 재시작 버튼 생성
+	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재시간 출력
+	TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);    // 남은 깃발 개수 출력
 
 	ShowDisplay();
 }
