@@ -8,14 +8,14 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 {
 	char board_state[HARD_Y_COUNT][HARD_X_COUNT];   // 가장 큰 사이즈의 보드만 있어도 모든 난이도의 게임을 만들 수 있다
 	char board_temp[HARD_Y_COUNT][HARD_X_COUNT];    // 깃발과 물음표를 사용할 때 원래 보드의 상태를 기억
-	char click_state[HARD_Y_COUNT][HARD_X_COUNT];   // 
-	char gridSize[3];      // 타일 하나의 크기 배열
-	char x_count[3];       // x축 타일의 개수
-	char y_count[3];       // y축 타일의 개수
-	char mineNum[3];       // 지뢰의 개수
-	char currFlagNum;      // 현재 깃발의 개수
-	char game_step;        // 현재 게임 단계
-	short level;            // 선택한 난이도
+	char click_state[HARD_Y_COUNT][HARD_X_COUNT];   // 판 클릭 상태
+	char gridSize[3];     // 타일 하나의 크기 배열
+	char x_count[3];      // x축 타일의 개수
+	char y_count[3];      // y축 타일의 개수
+	char mineNum[3];      // 지뢰의 개수
+	char currFlagNum;     // 현재 깃발의 개수
+	char game_step;       // 현재 게임 단계
+	short level;          // 선택한 난이도
 	UINT64 start_time;    // 시작 시간
 	UINT64 curr_time;     // 현재 시간
 	POINT temp_pos;       // 임시 커서 좌표
@@ -28,8 +28,8 @@ void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
 void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
 void checkClear(pGameData ap_data);    // 클리어 확인
-void openNothingClosed(pGameData ap_data, int x_count, int y_count);    // 연쇄적으로 판 오픈
-void flagQuesBoard(pGameData ap_data, int x_pos, int y_pos);    // 깃발과 물음표 관리
+void openNothingClosed(pGameData ap_data, int x_pos, int y_pos);    // 연쇄적으로 판 오픈
+void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
 void checkAndOpenBoard(pGameData ap_data, int x, int y);    // 올바르게 깃발을 놓고 휠을 누르면 근처 8개의판이 열림
 
 // 타이머가 1초마다 호출할 함수
@@ -154,7 +154,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 
 			if (x_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
 				y_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
-				flagQuesBoard(p_data, x_pos, y_pos);
+				flagQuesBoard(p_data, x_pos / p_data->gridSize[p_data->level - 1000], y_pos / p_data->gridSize[p_data->level - 1000]);
 			}
 			drawBoard(p_data);
 
@@ -400,10 +400,8 @@ void openNothingClosed(pGameData ap_data, int x_pos, int y_pos)
 }
 
 // 깃발과 물음표, 원래 상태를 토글
-void flagQuesBoard(pGameData ap_data, int x_pos, int y_pos)
+void flagQuesBoard(pGameData ap_data, int x, int y)
 {
-	int x = x_pos / ap_data->gridSize[ap_data->level - 1000], y = y_pos / ap_data->gridSize[ap_data->level - 1000];
-
 	if (x < ap_data->x_count[ap_data->level - 1000] && y < ap_data->y_count[ap_data->level - 1000]) {
 		if (ap_data->board_state[y][x] <= mine) {    // 닫힌 칸에만 적용
 			ap_data->board_temp[y][x] = ap_data->board_state[y][x];    // 원래 상태를 임시 판에 저장
