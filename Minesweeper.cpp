@@ -256,6 +256,10 @@ void drawBoard(pGameData ap_data)
 		}
 	}
 
+	Rectangle(150, 500, 190, 540, ORANGE, ORANGE);    // 재시작 버튼 생성
+	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재시간 출력
+	TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);    // 남은 깃발 개수 출력
+
 	// 지뢰 개수, 빈칸, 깃발, 물음표 출력
 	for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 		for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
@@ -303,10 +307,6 @@ void drawBoard(pGameData ap_data)
 		TextOut(400, 500, RGB(100, 255, 100), "Game Clear!");
 		TextOut(550, 500, BLACK, "Time : %02llu'%02llu\"%03llu", minute, sec, mSec);
 	}
-
-	Rectangle(150, 500, 190, 540, ORANGE, ORANGE);    // 재시작 버튼 생성
-	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재시간 출력
-	TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);    // 남은 깃발 개수 출력
 
 	ShowDisplay();
 }
