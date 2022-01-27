@@ -38,9 +38,9 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 	pGameData ap_data = (pGameData)GetAppData();
 
 	if (ap_data->game_step == PLAYGAME) {    // 게임중일 때만
-		ap_data->curr_time = GetTickCount64() - ap_data->start_time;    // 현재시간 구하기
+		ap_data->curr_time = GetTickCount64() - ap_data->start_time;    // 현재 시간 구하기
 		Rectangle(5, 495, 50, 523, WHITE, WHITE);    // 숫자 지우는 용도
-		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재시간 출력
+		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
 		ShowDisplay();
 	}
 }
@@ -80,8 +80,8 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 			p_data->currFlagNum = 0;    // 깃발 개수 초기화
 			memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
 			randMine(p_data);    // 지뢰 랜덤으로 생성
-			p_data->start_time = GetTickCount64();    // 시작시간 재설정
-			p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재시간 구하기
+			p_data->start_time = GetTickCount64();    // 시작 시간 재설정
+			p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
 		}
 		drawBoard(p_data);    // 판 그리기
 	}
@@ -273,7 +273,7 @@ void drawBoard(pGameData ap_data)
 
 	Rectangle(150, 500, 190, 540, ORANGE, ORANGE);    // 재시작 버튼 생성
 	Rectangle(5, 495, 50, 523, WHITE, WHITE);    // 숫자 지우는 용도
-	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재시간 출력
+	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
 	TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);    // 남은 깃발 개수 출력
 
 	// 지뢰 개수, 빈칸, 깃발, 물음표 출력
