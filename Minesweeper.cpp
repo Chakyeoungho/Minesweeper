@@ -37,9 +37,11 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 {
 	pGameData ap_data = (pGameData)GetAppData();
 
-	if (ap_data->game_step == PLAYGAME) {
-		ap_data->curr_time = GetTickCount64() - ap_data->start_time;
-		drawBoard(ap_data);
+	if (ap_data->game_step == PLAYGAME) {    // 게임중일 때만
+		ap_data->curr_time = GetTickCount64() - ap_data->start_time;    // 현재시간 구하기
+		Rectangle(5, 495, 50, 523, WHITE, WHITE);    // 숫자 지우는 용도
+		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재시간 출력
+		ShowDisplay();
 	}
 }
 
@@ -78,7 +80,8 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 			p_data->currFlagNum = 0;    // 깃발 개수 초기화
 			memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
 			randMine(p_data);    // 지뢰 랜덤으로 생성
-			p_data->start_time = GetTickCount64();    // 시간 초기화
+			p_data->start_time = GetTickCount64();    // 현재시간 구하기
+			p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재시간 구하기
 		}
 		drawBoard(p_data);    // 판 그리기
 	}
@@ -134,7 +137,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 					for (int j = x_pos / p_data->gridSize[p_data->level - 1000] - 1; j <= x_pos / p_data->gridSize[p_data->level - 1000] + 1; j++) {
 						if (i < 0 || j < 0 || i >= p_data->y_count[p_data->level - 1000] || j >= p_data->x_count[p_data->level - 1000] ||
 							(i == y_pos / p_data->gridSize[p_data->level - 1000] && j == x_pos / p_data->gridSize[p_data->level - 1000]) ||
-							p_data->board_state[i][j] > mine)
+							(p_data->board_state[i][j] >= nothing_open && p_data->board_state[i][j] <= mine_num8_open))
 							continue;
 
 						p_data->click_state[i][j] = CLICKED;
@@ -199,7 +202,7 @@ int main()
 	selectLvButton();    // 난이도 선택 버튼 생성
 
 	// 1초(1000ms)마다 함수를 호출
-	SetTimer(1, 1000, StopWatchProc);
+	SetTimer(1, 100, StopWatchProc);
 
 	ShowDisplay();    // 화면에 출력
 	return 0;
@@ -269,6 +272,7 @@ void drawBoard(pGameData ap_data)
 	}
 
 	Rectangle(150, 500, 190, 540, ORANGE, ORANGE);    // 재시작 버튼 생성
+	Rectangle(5, 495, 50, 523, WHITE, WHITE);    // 숫자 지우는 용도
 	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재시간 출력
 	TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);    // 남은 깃발 개수 출력
 
@@ -279,19 +283,19 @@ void drawBoard(pGameData ap_data)
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(0, 100, 200), RGB(0, 0, 128));
 
 			switch (ap_data->board_state[y][x]) {
-			case nothing_open:
+			case nothing_open:    // 그냥 열려있는 타일
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
 				break;
 			case mine_num1_open: case mine_num2_open: case mine_num3_open:
-			case mine_num4_open:					  case mine_num5_open:
+			case mine_num4_open:					  case mine_num5_open:    // 주변 지뢰 개수가 적힌 열린 타일
 			case mine_num6_open: case mine_num7_open: case mine_num8_open:
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
 				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], WHITE, "%d", ap_data->board_state[y][x] - 10);
 				break;
-			case flag:
-				Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(200, 100, 0), RGB(128, 0, 0));
+			case flag:    // 깃발
+				Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], WHITE, RGB(128, 0, 0));
 				break;
-			case questionMark:
+			case questionMark:    // 물음표
 				Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], WHITE, BLACK);
 				break;
 			default:
