@@ -80,7 +80,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 			p_data->currFlagNum = 0;    // 깃발 개수 초기화
 			memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
 			randMine(p_data);    // 지뢰 랜덤으로 생성
-			p_data->start_time = GetTickCount64();    // 현재시간 구하기
+			p_data->start_time = GetTickCount64();    // 시작시간 재설정
 			p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재시간 구하기
 		}
 		drawBoard(p_data);    // 판 그리기
