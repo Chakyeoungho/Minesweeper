@@ -123,8 +123,9 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 			}
 		}
 	}
+
 	// 마우스 휠버튼, 2개 이상의 버튼을 누른 경우에 처리
-	else if (a_message_id  == WM_MBUTTONDOWN || a_message_id == WM_MBUTTONDBLCLK) {
+	if (a_message_id  == WM_MBUTTONDOWN || a_message_id == WM_MBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
 			resetClickState(p_data);
 
@@ -264,13 +265,6 @@ void drawBoard(pGameData ap_data)
 {
 	Clear();    // 화면 초기화
 
-	// 판 그리기
-	for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
-		for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
-			Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(0, 0, 128), RGB(0, 100, 200));
-		}
-	}
-
 	Rectangle(150, 500, 190, 540, ORANGE, ORANGE);    // 재시작 버튼 생성
 	Rectangle(5, 495, 50, 523, WHITE, WHITE);    // 숫자 지우는 용도
 	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
@@ -279,6 +273,9 @@ void drawBoard(pGameData ap_data)
 	// 지뢰 개수, 빈칸, 깃발, 물음표 출력
 	for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 		for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
+			// 판 그리기
+			Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(0, 0, 128), RGB(0, 100, 200));
+			
 			if (ap_data->click_state[y][x] == CLICKED)    // 클릭된 타일
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(0, 100, 200), RGB(0, 0, 128));
 
@@ -287,7 +284,7 @@ void drawBoard(pGameData ap_data)
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
 				break;
 			case mine_num1_open: case mine_num2_open: case mine_num3_open:
-			case mine_num4_open:					  case mine_num5_open:    // 주변 지뢰 개수가 적힌 열린 타일
+			case mine_num4_open:					  case mine_num5_open:    // 주변의 지뢰 개수가 적힌 열린 타일
 			case mine_num6_open: case mine_num7_open: case mine_num8_open:
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
 				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], WHITE, "%d", ap_data->board_state[y][x] - 10);
