@@ -19,10 +19,10 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	UINT64 start_time;    // 시작 시간
 	UINT64 curr_time;     // 현재 시간
 	POINT temp_pos;       // 임시 커서 좌표
+	void *p_ctrl[3];
 } GameData, *pGameData;
 
-void selectLvButton();    // 난이도 선택 버튼 생성
-void selectLevel(pGameData ap_data, int x, int y);    // 난이도 선택
+void CreateSelectButton();    // 난이도 선택 버튼 생성
 void resetClickState(pGameData ap_data);    // 클릭 상태 초기화
 void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
@@ -69,27 +69,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 {
 	pGameData p_data = (pGameData)GetAppData();
 
-	// 난이도 선택 단계
-	if (p_data->game_step == SELECTLV) {
-		selectLevel(p_data, a_pos.x, a_pos.y);
-		p_data->start_time = GetTickCount64();
-	}
-	// 다시 시작 버튼 클릭
-	else if (a_pos.x >= 150 && a_pos.x <= 190 && a_pos.y >= 500 && a_pos.y <= 540) {
-		resetClickState(p_data);
-
-		if (p_data->temp_pos.x >= 150 && p_data->temp_pos.x <= 190 && p_data->temp_pos.y >= 500 && p_data->temp_pos.y <= 540) {
-			p_data->game_step = PLAYGAME;
-			p_data->currFlagNum = 0;    // 깃발 개수 초기화
-			memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
-			randMine(p_data);    // 지뢰 랜덤으로 생성
-			p_data->start_time = GetTickCount64();    // 시작 시간 재설정
-			p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
-		}
-		drawBoard(p_data);    // 판 그리기
-	}
-	// 게임 플레이 단계 | 지뢰 타일 오픈
-	else if (p_data->game_step == PLAYGAME) {
+	if (p_data->game_step == PLAYGAME) {
 		resetClickState(p_data);
 
 		// 좌클릭으로 판 열기
@@ -99,6 +79,48 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 			checkClear(p_data);
 		}
 		drawBoard(p_data);
+	}
+}
+
+// 버튼 관리
+void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
+{
+	pGameData p_data = (pGameData)GetAppData();
+
+	// 다시 시작 버튼 클릭
+	if (a_ctrl_id == RESTART) {
+		p_data->game_step = PLAYGAME;
+		p_data->currFlagNum = 0;    // 깃발 개수 초기화
+		memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
+		randMine(p_data);    // 지뢰 랜덤으로 생성
+		drawBoard(p_data);
+		p_data->start_time = GetTickCount64();    // 시작 시간 재설정
+		p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
+	}
+	else if (a_ctrl_id == TITLE) {
+		Clear();
+		ShowControl(p_data->p_ctrl[0], SW_SHOW);
+		ShowControl(p_data->p_ctrl[1], SW_SHOW);
+		ShowControl(p_data->p_ctrl[2], SW_SHOW);
+		p_data->game_step = SELECTLV;
+		p_data->currFlagNum = 0;    // 깃발 개수 초기화
+		memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
+		ShowDisplay();
+	}
+	// 좌클릭시 마우스의 좌표에 따라 난이도 조정
+	else if (a_ctrl_id >= EASY && a_ctrl_id <= HARD) {
+		if (p_data->game_step == SELECTLV) {
+			p_data->level = a_ctrl_id;    // 선택한 난이도 저장
+			randMine(p_data);    // 지뢰 랜덤으로 생성
+			drawBoard(p_data);    // 판 그리기
+			p_data->game_step++;    // 다음단계로 이동
+			ShowControl(p_data->p_ctrl[0], SW_HIDE);
+			ShowControl(p_data->p_ctrl[1], SW_HIDE);
+			ShowControl(p_data->p_ctrl[2], SW_HIDE);
+			CreateButton("Restart", 70, 500, 100, 40, RESTART);
+			CreateButton("Title", 180, 500, 100, 40, TITLE);
+			p_data->start_time = GetTickCount64();
+		}
 	}
 }
 
@@ -194,22 +216,23 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 }
 
 // 마우스 왼쪽 버튼을 클릭, 해제 그리고 시스템이 기본으로 처리하지 않는 메시지를 처리하는 함수
-ON_MESSAGE(OnMouseLeftDOWN, OnMouseLeftUP, NULL, NULL, NULL, OnUserMsg)
+ON_MESSAGE(OnMouseLeftDOWN, OnMouseLeftUP, NULL, OnCommand, NULL, OnUserMsg)
 
 int main()
 {
 	GameData data = { { { 0, }, },    // 판 상태
 					  { { 0, }, },    // 깃발과 물음표를 제외한 판 상태
 					  { { 0, }, },    // 깃발과 물음표를 제외한 판 상태
-					  {EASY_GRID_SIZE, NORMAL_GRID_SIZE, HARD_GRID_SIZE},    // 타일 하나의 크기 배열
-					  {EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT  },    // x축 타일의 개수
-					  {EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT  },    // y축 타일의 개수
-					  {EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM },    // 지뢰의 개수
+					  { EASY_GRID_SIZE, NORMAL_GRID_SIZE, HARD_GRID_SIZE },    // 타일 하나의 크기 배열
+					  { EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT   },    // x축 타일의 개수
+					  { EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT   },    // y축 타일의 개수
+					  { EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM  },    // 지뢰의 개수
 					  0, SELECTLV, 0 };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 
-	SelectFontObject("굴림", 20, 1);    // 글씨체와 크기 설정
-	selectLvButton();    // 난이도 선택 버튼 생성
+	SelectFontObject("굴림", 20, 1);
+
+	CreateSelectButton();
 
 	// 1초(1000ms)마다 함수를 호출
 	SetTimer(1, 100, StopWatchProc);
@@ -219,44 +242,12 @@ int main()
 }
 
 // 난이도 선택 버튼 생성
-void selectLvButton()
-{
-	Clear();
+void CreateSelectButton() {
+	pGameData ap_data = (pGameData)GetAppData();
 
-	Rectangle(20, 10, 108, 38, ORANGE, ORANGE);     // 쉬움lv
-	TextOut(43, 13, BLACK, "쉬움");
-
-	Rectangle(120, 10, 208, 38, ORANGE, ORANGE);    // 보통lv
-	TextOut(143, 13, BLACK, "보통");
-
-	Rectangle(220, 10, 308, 38, ORANGE, ORANGE);    // 어려움lv
-	TextOut(233, 13, BLACK, "어려움");
-
-	ShowDisplay();
-}
-
-// 난이도 선택
-void selectLevel(pGameData ap_data, int x, int y)
-{
-	// 좌클릭시 마우스의 좌표에 따라 난이도 조정
-	if (x >= 20 && x <= 108 && y >= 10 && y <= 38) {
-		ap_data->level = EASY;    // 선택한 난이도 저장
-		randMine(ap_data);    // 지뢰 랜덤으로 생성
-		drawBoard(ap_data);    // 판 그리기
-		ap_data->game_step++;    // 다음단계로 이동
-	}
-	else if (x >= 120 && x <= 208 && y >= 10 && y <= 38) {
-		ap_data->level = NORMAL;
-		randMine(ap_data);
-		drawBoard(ap_data);
-		ap_data->game_step++;
-	}
-	else if (x >= 220 && x <= 308 && y >= 10 && y <= 38) {
-		ap_data->level = HARD;
-		randMine(ap_data);
-		drawBoard(ap_data);
-		ap_data->game_step++;
-	}
+	ap_data->p_ctrl[0] = CreateButton("쉬움", 10, 100, 98, 120, EASY);
+	ap_data->p_ctrl[1] = CreateButton("보통", 110, 100, 98, 120, NORMAL);
+	ap_data->p_ctrl[2] = CreateButton("어려움", 210, 100, 98, 120, HARD);
 }
 
 // 클릭 생태를 저장하는 판 초기화
@@ -274,7 +265,6 @@ void drawBoard(pGameData ap_data)
 {
 	Clear();    // 화면 초기화
 
-	Rectangle(150, 500, 190, 540, ORANGE, ORANGE);    // 재시작 버튼 생성
 	Rectangle(5, 495, 50, 523, WHITE, WHITE);    // 숫자 지우는 용도
 	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
 	TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);    // 남은 깃발 개수 출력
