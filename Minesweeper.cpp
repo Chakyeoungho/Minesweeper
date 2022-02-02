@@ -82,7 +82,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 	}
 }
 
-// 버튼 관리
+// 난이도 선택, 재시작 버튼 관리
 void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 {
 	pGameData p_data = (pGameData)GetAppData();
@@ -117,8 +117,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			ShowControl(p_data->p_ctrl[0], SW_HIDE);
 			ShowControl(p_data->p_ctrl[1], SW_HIDE);
 			ShowControl(p_data->p_ctrl[2], SW_HIDE);
-			CreateButton("Restart", 70, 500, 100, 40, RESTART);
-			CreateButton("Title", 180, 500, 100, 40, TITLE);
+			CreateButton("Restart", 70, 490, 100, 40, RESTART);
+			CreateButton("Title", 180, 490, 100, 40, TITLE);
 			p_data->start_time = GetTickCount64();
 		}
 	}
