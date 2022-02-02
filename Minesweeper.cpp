@@ -6,9 +6,9 @@
 
 typedef struct _GameData // 게임 플레이중 필요한 데이터
 {
-	char board_state[HARD_Y_COUNT][HARD_X_COUNT];   // 가장 큰 사이즈의 보드만 있어도 모든 난이도의 게임을 만들 수 있다
-	char board_temp[HARD_Y_COUNT][HARD_X_COUNT];    // 깃발과 물음표를 사용할 때 원래 보드의 상태를 기억
-	char click_state[HARD_Y_COUNT][HARD_X_COUNT];   // 판 클릭 상태
+	char board_state[HARD_Y_COUNT][HARD_X_COUNT];    // 가장 큰 사이즈의 보드만 있어도 모든 난이도의 게임을 만들 수 있다
+	char board_temp[HARD_Y_COUNT][HARD_X_COUNT];     // 깃발과 물음표를 사용할 때 원래 보드의 상태를 기억
+	char click_state[HARD_Y_COUNT][HARD_X_COUNT];    // 판 클릭 상태
 	char gridSize[3];     // 타일 하나의 크기 배열
 	char x_count[3];      // x축 타일의 개수
 	char y_count[3];      // y축 타일의 개수
@@ -54,7 +54,10 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 	if (p_data->game_step == PLAYGAME) {
 		resetClickState(p_data);
 
-		if (p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] <= mine) {
+		if (a_pos.x > 0 && a_pos.y > 0 && 
+			a_pos.x < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] && 
+			a_pos.y < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] && 
+			p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] <= mine) {
 			p_data->click_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] = CLICKED;
 			drawBoard(p_data);
 		}
@@ -115,7 +118,10 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 			p_data->temp_pos.y = y_pos;
 			resetClickState(p_data);
 
-			if (p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] <= mine) {
+			if (x_pos > 0 && y_pos > 0 &&
+				x_pos < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
+				y_pos < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] && 
+				p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] <= mine) {
 				p_data->click_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] = CLICKED;
 				drawBoard(p_data);
 
@@ -124,12 +130,15 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 		}
 	}
 
-	// 마우스 휠버튼, 2개 이상의 버튼을 누른 경우에 처리
+	// 마우스 휠 버튼을 누른 경우에 처리
 	if (a_message_id  == WM_MBUTTONDOWN || a_message_id == WM_MBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
 			resetClickState(p_data);
 
-			if (x_pos / p_data->gridSize[p_data->level - 1000] < p_data->x_count[p_data->level - 1000] &&
+			if (x_pos > 0 && y_pos > 0 &&
+				x_pos < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
+				y_pos < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] && 
+				x_pos / p_data->gridSize[p_data->level - 1000] < p_data->x_count[p_data->level - 1000] &&
 				y_pos / p_data->gridSize[p_data->level - 1000] < p_data->y_count[p_data->level - 1000]) {
 				p_data->temp_pos.x = x_pos;
 				p_data->temp_pos.y = y_pos;
