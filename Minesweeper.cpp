@@ -22,7 +22,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	void *p_ctrl[3];
 } GameData, *pGameData;
 
-void CreateSelectButton();    // 난이도 선택 버튼 생성
+void CreateSelectLVButton();    // 난이도 선택 버튼 생성
 void resetClickState(pGameData ap_data);    // 클릭 상태 초기화
 void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
@@ -32,7 +32,7 @@ void openNothingClosed(pGameData ap_data, int x_pos, int y_pos);    // 연쇄적
 void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
 void checkAndOpenBoard(pGameData ap_data, int x, int y);    // 올바르게 깃발을 놓고 휠을 누르면 근처 8개의판이 열림
 
-// 타이머가 1초마다 호출할 함수
+// 타이머가 0.1초마다 호출할 함수
 TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 {
 	pGameData ap_data = (pGameData)GetAppData();
@@ -220,6 +220,9 @@ ON_MESSAGE(OnMouseLeftDOWN, OnMouseLeftUP, NULL, OnCommand, NULL, OnUserMsg)
 
 int main()
 {
+	// 글꼴, 글자 크기 적용
+	SelectFontObject("굴림", 20, 1);
+
 	GameData data = { { { 0, }, },    // 판 상태
 					  { { 0, }, },    // 깃발과 물음표를 제외한 판 상태
 					  { { 0, }, },    // 깃발과 물음표를 제외한 판 상태
@@ -230,11 +233,12 @@ int main()
 					  0, SELECTLV, 0 };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 
-	SelectFontObject("굴림", 20, 1);
+	TextOut(10, 10, BLACK, "Minesweeper");
 
-	CreateSelectButton();
+	// 난이도 선택 버튼 생성
+	CreateSelectLVButton();
 
-	// 1초(1000ms)마다 함수를 호출
+	// 0.1초(100ms)마다 함수를 호출
 	SetTimer(1, 100, StopWatchProc);
 
 	ShowDisplay();    // 화면에 출력
@@ -242,7 +246,7 @@ int main()
 }
 
 // 난이도 선택 버튼 생성
-void CreateSelectButton() {
+void CreateSelectLVButton() {
 	pGameData ap_data = (pGameData)GetAppData();
 
 	ap_data->p_ctrl[0] = CreateButton("쉬움", 10, 100, 98, 120, EASY);
