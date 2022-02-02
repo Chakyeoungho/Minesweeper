@@ -99,6 +99,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 	}
 	else if (a_ctrl_id == TITLE) {
 		Clear();
+		TextOut(10, 10, BLACK, "Minesweeper");
 		ShowControl(p_data->p_ctrl[0], SW_SHOW);
 		ShowControl(p_data->p_ctrl[1], SW_SHOW);
 		ShowControl(p_data->p_ctrl[2], SW_SHOW);
