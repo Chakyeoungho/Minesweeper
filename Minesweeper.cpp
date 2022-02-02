@@ -54,9 +54,9 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 	if (p_data->game_step == PLAYGAME) {
 		resetClickState(p_data);
 
-		if (a_pos.x > 0 && a_pos.y > 0 && 
-			a_pos.x < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] && 
-			a_pos.y < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] && 
+		if (a_pos.x > 0 && a_pos.y > 0 &&
+			a_pos.x < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
+			a_pos.y < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] &&
 			p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] <= mine) {
 			p_data->click_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] = CLICKED;
 			drawBoard(p_data);
@@ -143,7 +143,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 
 			if (x_pos > 0 && y_pos > 0 &&
 				x_pos < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
-				y_pos < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] && 
+				y_pos < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] &&
 				p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] <= mine) {
 				p_data->click_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] = CLICKED;
 				drawBoard(p_data);
@@ -154,13 +154,13 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	}
 
 	// 마우스 휠 버튼을 누른 경우에 처리
-	if (a_message_id  == WM_MBUTTONDOWN || a_message_id == WM_MBUTTONDBLCLK) {
+	if (a_message_id == WM_MBUTTONDOWN || a_message_id == WM_MBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
 			resetClickState(p_data);
 
 			if (x_pos > 0 && y_pos > 0 &&
 				x_pos < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
-				y_pos < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] && 
+				y_pos < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] &&
 				x_pos / p_data->gridSize[p_data->level - 1000] < p_data->x_count[p_data->level - 1000] &&
 				y_pos / p_data->gridSize[p_data->level - 1000] < p_data->y_count[p_data->level - 1000]) {
 				p_data->temp_pos.x = x_pos;
@@ -208,7 +208,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 				checkClear(p_data);
 			}
 			drawBoard(p_data);
-				
+
 			return 1;
 		}
 	}
@@ -279,7 +279,7 @@ void drawBoard(pGameData ap_data)
 		for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
 			// 판 그리기
 			Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(0, 0, 128), RGB(0, 100, 200));
-			
+
 			if (ap_data->click_state[y][x] == CLICKED)    // 클릭된 타일
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(0, 100, 200), RGB(0, 0, 128));
 
@@ -304,7 +304,7 @@ void drawBoard(pGameData ap_data)
 			}
 		}
 	}
-	
+
 	if (ap_data->game_step == GAMEOVER) {
 		for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 			for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
@@ -452,7 +452,7 @@ void checkAndOpenBoard(pGameData ap_data, int x, int y)
 		for (int i = y - 1; i <= y + 1; i++) {
 			for (int j = x - 1; j <= x + 1; j++) {
 				if (i < 0 || j < 0 || j >= ap_data->x_count[ap_data->level - 1000] || i >= ap_data->y_count[ap_data->level - 1000] ||
-					(ap_data->board_state[i][j] >= nothing_open && ap_data->board_state[i][j] <= mine_num8_open) || 
+					(ap_data->board_state[i][j] >= nothing_open && ap_data->board_state[i][j] <= mine_num8_open) ||
 					ap_data->board_state[i][j] == flag || ap_data->board_state[i][j] == questionMark)
 					continue;
 
