@@ -20,7 +20,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	UINT64 curr_time;     // 현재 시간
 	POINT temp_pos;       // 임시 커서 좌표
 	void *p_select_ctrl[3];    // 난이도 선택 버튼 주소
-	void *p_g_ctrl[2];         // 재시작, 타이틀 버튼 주소
+	void *p_game_ctrl[2];         // 재시작, 타이틀 버튼 주소
 } GameData, *pGameData;
 
 void CreateSelectLVButton();    // 난이도 선택 버튼 생성
@@ -103,8 +103,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		TextOut(10, 10, BLACK, "Minesweeper");
 
 		// 재시작, 타이틀 버튼 숨기기
-		ShowControl(p_data->p_g_ctrl[0], SW_HIDE);
-		ShowControl(p_data->p_g_ctrl[1], SW_HIDE);
+		ShowControl(p_data->p_game_ctrl[0], SW_HIDE);
+		ShowControl(p_data->p_game_ctrl[1], SW_HIDE);
 		// 난이도 선택 버튼 보이기
 		ShowControl(p_data->p_select_ctrl[0], SW_SHOW);
 		ShowControl(p_data->p_select_ctrl[1], SW_SHOW);
@@ -128,8 +128,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			ShowControl(p_data->p_select_ctrl[1], SW_HIDE);
 			ShowControl(p_data->p_select_ctrl[2], SW_HIDE);
 			// 재시작, 타이틀 버튼 보이기
-			ShowControl(p_data->p_g_ctrl[0], SW_SHOW);
-			ShowControl(p_data->p_g_ctrl[1], SW_SHOW);
+			ShowControl(p_data->p_game_ctrl[0], SW_SHOW);
+			ShowControl(p_data->p_game_ctrl[1], SW_SHOW);
 
 			p_data->start_time = GetTickCount64();    // 시간 초기화
 		}
@@ -267,12 +267,12 @@ void CreateSelectLVButton() {
 	ap_data->p_select_ctrl[2] = CreateButton("어려움", 210, 100, 98, 120, HARD);
 
 	// 재시작, 타이틀 버튼 만들고 주소 저장
-	ap_data->p_g_ctrl[0] = CreateButton("Restart", 70, 490, 100, 40, RESTART);
-	ap_data->p_g_ctrl[1] = CreateButton("Title", 180, 490, 100, 40, TITLE);
+	ap_data->p_game_ctrl[0] = CreateButton("Restart", 70, 490, 100, 40, RESTART);
+	ap_data->p_game_ctrl[1] = CreateButton("Title", 180, 490, 100, 40, TITLE);
 
 	// 재시작, 타이틀 버튼 숨기기
-	ShowControl(ap_data->p_g_ctrl[0], SW_HIDE);
-	ShowControl(ap_data->p_g_ctrl[1], SW_HIDE);
+	ShowControl(ap_data->p_game_ctrl[0], SW_HIDE);
+	ShowControl(ap_data->p_game_ctrl[1], SW_HIDE);
 }
 
 // 클릭 생태를 저장하는 판 초기화
