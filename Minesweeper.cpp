@@ -20,7 +20,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	UINT64 curr_time;     // 현재 시간
 	POINT temp_pos;       // 임시 커서 좌표
 	void *p_select_ctrl[3];    // 난이도 선택 버튼 주소
-	void *p_game_ctrl[2];         // 재시작, 타이틀 버튼 주소
+	void *p_game_ctrl[2];      // 재시작, 타이틀 버튼 주소
 } GameData, *pGameData;
 
 void CreateSelectLVButton();    // 난이도 선택 버튼 생성
@@ -237,7 +237,7 @@ int main()
 
 	GameData data = { { { 0, }, },    // 판 상태
 					  { { 0, }, },    // 깃발과 물음표를 제외한 판 상태
-					  { { 0, }, },    // 깃발과 물음표를 제외한 판 상태
+					  { { 0, }, },    // 판 클릭 상태
 					  { EASY_GRID_SIZE, NORMAL_GRID_SIZE, HARD_GRID_SIZE },    // 타일 하나의 크기 배열
 					  { EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT   },    // x축 타일의 개수
 					  { EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT   },    // y축 타일의 개수
@@ -245,13 +245,9 @@ int main()
 					  0, SELECTLV, 0 };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 
-	TextOut(10, 10, BLACK, "Minesweeper");
-
-	// 난이도 선택 버튼 생성
-	CreateSelectLVButton();
-
-	// 0.1초(100ms)마다 함수를 호출
-	SetTimer(1, 100, StopWatchProc);
+	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
+	CreateSelectLVButton();    // 난이도 선택 버튼 생성
+	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
 
 	ShowDisplay();    // 화면에 출력
 	return 0;
@@ -317,7 +313,7 @@ void drawBoard(pGameData ap_data)
 				Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], WHITE, RGB(128, 0, 0));
 				break;
 			case questionMark:    // 물음표
-				Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], WHITE, BLACK);
+				Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], WHITE, YELLOW);
 				break;
 			default:
 				break;
@@ -328,8 +324,10 @@ void drawBoard(pGameData ap_data)
 	if (ap_data->game_step == GAMEOVER) {
 		for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 			for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
-				if (ap_data->board_state[y][x] == mine)
+				if (ap_data->board_state[y][x] == mine)    // 지뢰 출력
 					Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, BLACK);
+				else if (ap_data->board_state[y][x] == flag && ap_data->board_temp[y][x] != mine)    // 지뢰 잘못 찾은 깃발 출력
+					Ellipse(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GREEN);
 			}
 		}
 

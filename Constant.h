@@ -75,6 +75,8 @@ enum boardState {
 #define WHITE  RGB(255, 255, 255)    // 흰색
 #define ORANGE RGB(200, 150, 30)     // 주황색
 #define GRAY   RGB(100, 100, 100)    // 회색
+#define YELLOW RGB(255, 255, 0)      // 노랑
+#define GREEN  RGB(0, 255, 0)        // 초록
 
 // 현재 개임 스텝
 #define SELECTLV 0    // 난이도 선택 화면
