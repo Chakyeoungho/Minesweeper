@@ -92,7 +92,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 	if (a_ctrl_id == RESTART) {
 		p_data->game_step = PLAYGAME;
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
-		memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
+		memset(p_data, 0, sizeof(char) * 16 * 30 * 3);    // 게임정보 초기화
 		randMine(p_data);    // 지뢰 랜덤으로 생성
 		drawBoard(p_data);
 		p_data->start_time = GetTickCount64();    // 시작 시간 재설정
@@ -101,6 +101,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 	else if (a_ctrl_id == TITLE) {
 		Clear();
 		TextOut(10, 10, BLACK, "Minesweeper");
+
 		// 재시작, 타이틀 버튼 숨기기
 		ShowControl(p_data->p_g_ctrl[0], SW_HIDE);
 		ShowControl(p_data->p_g_ctrl[1], SW_HIDE);
@@ -108,6 +109,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		ShowControl(p_data->p_select_ctrl[0], SW_SHOW);
 		ShowControl(p_data->p_select_ctrl[1], SW_SHOW);
 		ShowControl(p_data->p_select_ctrl[2], SW_SHOW);
+
 		p_data->game_step = SELECTLV;
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
 		memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
@@ -119,14 +121,16 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			p_data->level = a_ctrl_id;    // 선택한 난이도 저장
 			randMine(p_data);    // 지뢰 랜덤으로 생성
 			drawBoard(p_data);    // 판 그리기
-			p_data->game_step++;    // 다음단계로 이동
+			p_data->game_step = PLAYGAME;    // 다음단계로 이동
+
 			// 난이도 선택 버튼 숨기기
 			ShowControl(p_data->p_select_ctrl[0], SW_HIDE);
 			ShowControl(p_data->p_select_ctrl[1], SW_HIDE);
 			ShowControl(p_data->p_select_ctrl[2], SW_HIDE);
-			// 재시작, 타이틀 버튼 만들고 주소 저장
-			p_data->p_g_ctrl[0] = CreateButton("Restart", 70, 490, 100, 40, RESTART);
-			p_data->p_g_ctrl[1] = CreateButton("Title", 180, 490, 100, 40, TITLE);
+			// 재시작, 타이틀 버튼 보이기
+			ShowControl(p_data->p_g_ctrl[0], SW_SHOW);
+			ShowControl(p_data->p_g_ctrl[1], SW_SHOW);
+
 			p_data->start_time = GetTickCount64();    // 시간 초기화
 		}
 	}
@@ -257,9 +261,18 @@ int main()
 void CreateSelectLVButton() {
 	pGameData ap_data = (pGameData)GetAppData();
 
+	// 난이도 선택 버튼 만들고 주소 저장
 	ap_data->p_select_ctrl[0] = CreateButton("쉬움", 10, 100, 98, 120, EASY);
 	ap_data->p_select_ctrl[1] = CreateButton("보통", 110, 100, 98, 120, NORMAL);
 	ap_data->p_select_ctrl[2] = CreateButton("어려움", 210, 100, 98, 120, HARD);
+
+	// 재시작, 타이틀 버튼 만들고 주소 저장
+	ap_data->p_g_ctrl[0] = CreateButton("Restart", 70, 490, 100, 40, RESTART);
+	ap_data->p_g_ctrl[1] = CreateButton("Title", 180, 490, 100, 40, TITLE);
+
+	// 재시작, 타이틀 버튼 숨기기
+	ShowControl(ap_data->p_g_ctrl[0], SW_HIDE);
+	ShowControl(ap_data->p_g_ctrl[1], SW_HIDE);
 }
 
 // 클릭 생태를 저장하는 판 초기화
