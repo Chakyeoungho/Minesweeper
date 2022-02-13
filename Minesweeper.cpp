@@ -15,7 +15,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	BYTE mineNum[3];      // 지뢰의 개수
 	BYTE currFlagNum;     // 현재 깃발의 개수
 	BYTE game_step;       // 현재 게임 단계
-	short level;          // 선택한 난이도
+	WORD level;          // 선택한 난이도
 	UINT64 start_time;    // 시작 시간
 	UINT64 curr_time;     // 현재 시간
 	POINT temp_pos;       // 임시 커서 좌표
@@ -159,10 +159,10 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 				p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] <= mine) {
 				p_data->click_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] = CLICKED;    // 클릭
 				drawBoard(p_data);    // 판 그리기
-
-				return 1;    // 종료
 			}
 		}
+
+		return 1;    // 종료
 	}
 
 	// 마우스 휠 버튼을 누른 경우에 처리
@@ -189,10 +189,10 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 					}
 				}
 				drawBoard(p_data);    // 판 그리기
-
-				return 1;    // 종료
 			}
 		}
+
+		return 1;    // 종료
 	}
 
 	// 마우스 오른쪽 버튼을 땐 경우에 처리
@@ -205,12 +205,13 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 				flagQuesBoard(p_data, x_pos / p_data->gridSize[p_data->level - 1000], y_pos / p_data->gridSize[p_data->level - 1000]);    // 깃발, 물음표
 			}
 			drawBoard(p_data);    // 판 그리기
-
-			return 1;    // 종료
 		}
+
+		return 1;    // 종료
 	}
+
 	// 마우스 휠버튼, 더블클릭, 양쪽 보튼 클릭 후 오른쪽 버튼을 땜
-	else if (a_message_id == WM_MBUTTONUP || a_message_id == WM_LBUTTONDBLCLK) {
+	if (a_message_id == WM_MBUTTONUP || a_message_id == WM_LBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
 			resetClickState(p_data);    // 클릭 초기화
 
@@ -220,9 +221,9 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 				checkClear(p_data);    // 게임 클리어 확인
 			}
 			drawBoard(p_data);    // 판 그리기
-
-			return 1;    // 종료
 		}
+
+		return 1;    // 종료
 	}
 
 	return 0;    // 종료
@@ -362,7 +363,7 @@ void randMine(pGameData ap_data)
 			// 지뢰가 생성되는 순간 주위 8곳에 1증가
 			for (int y = tempY - 1; y <= tempY + 1; y++) {
 				for (int x = tempX - 1; x <= tempX + 1; x++) {
-					if (y < 0 || x < 0 || x >= ap_data->x_count[ap_data->level - 1000] || y >= ap_data->y_count[ap_data->level - 1000] || 
+					if (y < 0 || x < 0 || x >= ap_data->x_count[ap_data->level - 1000] || y >= ap_data->y_count[ap_data->level - 1000] ||
 						ap_data->board_state[y][x] == mine)    // 범위, 지뢰 체크 
 						continue;
 					ap_data->board_state[y][x]++;
