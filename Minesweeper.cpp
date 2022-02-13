@@ -1,4 +1,5 @@
 ﻿#include "pch.h"
+#include "stdio.h"       // 파일 입출력, 로컬 랭킹 기록용
 #include "tipsware.h"
 #include "Constant.h"    // 필요한 상수를 모아놓은 헤더파일
 #include <Windowsx.h>    // lParam의 값을 x, y좌표로 바꾸기 위한 매크로가 들어있는 헤더파일
@@ -15,7 +16,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	BYTE mineNum[3];      // 지뢰의 개수
 	BYTE currFlagNum;     // 현재 깃발의 개수
 	BYTE game_step;       // 현재 게임 단계
-	WORD level;          // 선택한 난이도
+	WORD level;           // 선택한 난이도
 	UINT64 start_time;    // 시작 시간
 	UINT64 curr_time;     // 현재 시간
 	POINT temp_pos;       // 임시 커서 좌표
@@ -29,6 +30,7 @@ void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
 void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
 void checkClear(pGameData ap_data);    // 클리어 확인
+void writeRank(pGameData ap_data);    // 랭킹 작성
 void openNothingClosed(pGameData ap_data, int x_pos, int y_pos);    // 연쇄적으로 판 오픈
 void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
 void checkAndOpen8Board(pGameData ap_data, int x, int y);    // 올바르게 깃발을 놓고 휠을 누르면 근처 8개의판이 열림
@@ -288,7 +290,7 @@ void drawBoard(pGameData ap_data)
 {
 	Clear();    // 화면 초기화
 
-	Rectangle(5, 495, 50, 523, WHITE, WHITE);    // 숫자 지우는 용도
+	Rectangle(5, 495, 67, 523, WHITE, WHITE);    // 숫자 지우는 용도
 	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
 	TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);    // 남은 깃발 개수 출력
 
@@ -323,6 +325,17 @@ void drawBoard(pGameData ap_data)
 		}
 	}
 
+	// 게임 클리어시 걸린 시간 출력
+	if (ap_data->game_step == CLEARGME) {
+		UINT64 minute = ap_data->curr_time / 60000;
+		UINT64 sec = (ap_data->curr_time % 60000) / 1000;
+		UINT64 mSec = ap_data->curr_time % 1000;
+
+		TextOut(400, 500, RGB(100, 255, 100), "Game Clear!");
+		TextOut(550, 500, BLACK, "Time : %02llu'%02llu\"%03llu", minute, sec, mSec);
+	}
+
+	// 게임오버시 지뢰의 위치와 깃발로 잘못 찾은 지뢰 출력
 	if (ap_data->game_step == GAMEOVER) {
 		for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 			for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
@@ -336,16 +349,7 @@ void drawBoard(pGameData ap_data)
 		TextOut(400, 500, RGB(255, 0, 0), "Game Over!");
 	}
 
-	if (ap_data->game_step == CLEARGME) {
-		UINT64 minute = ap_data->curr_time / 60000;
-		UINT64 sec = (ap_data->curr_time % 60000) / 1000;
-		UINT64 mSec = ap_data->curr_time % 1000;
-
-		TextOut(400, 500, RGB(100, 255, 100), "Game Clear!");
-		TextOut(550, 500, BLACK, "Time : %02llu'%02llu\"%03llu", minute, sec, mSec);
-	}
-
-	ShowDisplay();
+	ShowDisplay();    // 화면에 출력
 }
 
 // 랜덤으로 지뢰 생성
@@ -393,17 +397,22 @@ void checkClear(pGameData ap_data)
 {
 	int closedTile = 0;    // 닫힌 타일
 
-	if (ap_data->game_step == PLAYGAME) {    // 플레이중 일 때만
-		for (int i = 0; i < ap_data->y_count[ap_data->level - 1000]; i++) {
-			for (int j = 0; j < ap_data->x_count[ap_data->level - 1000]; j++) {
-				if (ap_data->board_state[i][j] <= 9 || ap_data->board_state[i][j] == flag || ap_data->board_state[i][j] == questionMark)
-					closedTile++;    // 닫힌 타일 1증가
-			}
+	for (int i = 0; i < ap_data->y_count[ap_data->level - 1000]; i++) {
+		for (int j = 0; j < ap_data->x_count[ap_data->level - 1000]; j++) {
+			if (ap_data->board_state[i][j] <= 9 || ap_data->board_state[i][j] == flag || ap_data->board_state[i][j] == questionMark)
+				closedTile++;    // 닫힌 타일 1증가
 		}
-
-		if (closedTile == ap_data->mineNum[ap_data->level - 1000])    // 닫힌 타일의 개수가 지뢰의 개수와 같으면
-			ap_data->game_step = CLEARGME;    // 게임 단계를 클리어로 수정
 	}
+
+	if (closedTile == ap_data->mineNum[ap_data->level - 1000])    // 닫힌 타일의 개수가 지뢰의 개수와 같으면
+		ap_data->game_step = CLEARGME;    // 게임 단계를 클리어로 수정
+}
+
+// 게임 클리어 시간 랭킹 작성
+void writeRank(pGameData ap_data)
+{
+	// TODO 파일 만들고 텍스트 파일에 시간 저장
+	int time = ap_data->curr_time;
 }
 
 // 아무것도 없는 판을 연쇄적으로 열기
