@@ -177,9 +177,6 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			ShowControl(p_data->button_adress.p_select_ctrl[2], SW_HIDE);
 			// 게임 룰 버튼 숨기기
 			ShowControl(p_data->button_adress.p_game_rule, SW_HIDE);
-			// 재시작, 타이틀 버튼 숨기기
-			ShowControl(p_data->button_adress.p_game_ctrl[0], SW_HIDE);
-			ShowControl(p_data->button_adress.p_game_ctrl[1], SW_HIDE);
 			
 			Rank data;
 
@@ -190,12 +187,11 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			
 			for (int i = 0; i < 3; i++) {
 				for (int j = 0; j < 10; j++) {
-					TextOut(10 + (250 * i), 150 + (28 * j), "%llu", data.rank[i][j]);
+					TextOut(10 + (250 * i), 150 + (28 * j), "%02llu'%02llu\"%03llu", data.rank[i][j] / 60000, (data.rank[i][j] % 60000) / 1000, data.rank[i][j] % 1000);
 				}
 			}
 
 			fclose(fp);
-			
 			break;
 		}
 		default:
@@ -207,9 +203,6 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			ShowControl(p_data->button_adress.p_select_ctrl[2], SW_SHOW);
 			// 게임 룰 버튼 보이기
 			ShowControl(p_data->button_adress.p_game_rule, SW_SHOW);
-			// 재시작, 타이틀 버튼 보이기
-			ShowControl(p_data->button_adress.p_game_ctrl[0], SW_SHOW);
-			ShowControl(p_data->button_adress.p_game_ctrl[1], SW_SHOW);
 			break;
 		}
 
