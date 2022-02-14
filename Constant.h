@@ -44,8 +44,10 @@ enum boardState {
 #define HARD   1002    // 난이도 어려움
 
 // 게임 버튼 id
-#define RESTART 1010 // 게임 재시작
-#define TITLE   1011 // 레벨 선택
+#define RESTART 1010    // 게임 재시작
+#define TITLE   1011    // 레벨 선택
+#define RULE    1020    // 게임 룰
+#define RANK    1030    // 랭킹
 
 // 보드판 x, y축 크기
 #define EASY_X_COUNT    9    // 쉬움 난이도 x축 개수

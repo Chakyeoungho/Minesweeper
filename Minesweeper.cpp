@@ -1,9 +1,26 @@
 ﻿#include "pch.h"
-#include "stdio.h"       // 파일 입출력, 로컬 랭킹 기록용
+#include <stdio.h>       // 파일 입출력, 로컬 랭킹 기록용
 #include "tipsware.h"
 #include "Constant.h"    // 필요한 상수를 모아놓은 헤더파일
 #include <Windowsx.h>    // lParam의 값을 x, y좌표로 바꾸기 위한 매크로가 들어있는 헤더파일
 #include <time.h>        // 난수의 시드값을 설정하기 위한 헤더파일
+
+#pragma pack(push, 1)
+typedef struct _Rank
+{
+	UINT64 easy_rank[10];
+	UINT64 normal_rank[10];
+	UINT64 hard_rank[10];
+} Rank, *pRank;
+#pragma pack(pop)
+
+typedef struct _GameButton
+{
+	void *p_select_ctrl[3];    // 난이도 선택 버튼 주소
+	void *p_game_ctrl[2];      // 재시작, 타이틀 버튼 주소
+	void *p_game_rank;         // 랭킹 버튼 주소
+	void *p_game_rule;         // 게임 규칙 버튼 주소
+} GameButton, *pGameButton;
 
 typedef struct _GameData // 게임 플레이중 필요한 데이터
 {
@@ -20,8 +37,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	UINT64 start_time;    // 시작 시간
 	UINT64 curr_time;     // 현재 시간
 	POINT temp_pos;       // 임시 커서 좌표
-	void *p_select_ctrl[3];    // 난이도 선택 버튼 주소
-	void *p_game_ctrl[2];      // 재시작, 타이틀 버튼 주소
+	GameButton button_adress;    // 게임 버튼 주소 모아놓은 구조체
 } GameData, *pGameData;
 
 void CreateSelectLVButton();    // 난이도 선택 버튼 생성
@@ -105,12 +121,15 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		TextOut(10, 10, BLACK, "Minesweeper");    // 제목
 
 		// 재시작, 타이틀 버튼 숨기기
-		ShowControl(p_data->p_game_ctrl[0], SW_HIDE);
-		ShowControl(p_data->p_game_ctrl[1], SW_HIDE);
+		ShowControl(p_data->button_adress.p_game_ctrl[0], SW_HIDE);
+		ShowControl(p_data->button_adress.p_game_ctrl[1], SW_HIDE);
 		// 난이도 선택 버튼 보이기
-		ShowControl(p_data->p_select_ctrl[0], SW_SHOW);
-		ShowControl(p_data->p_select_ctrl[1], SW_SHOW);
-		ShowControl(p_data->p_select_ctrl[2], SW_SHOW);
+		ShowControl(p_data->button_adress.p_select_ctrl[0], SW_SHOW);
+		ShowControl(p_data->button_adress.p_select_ctrl[1], SW_SHOW);
+		ShowControl(p_data->button_adress.p_select_ctrl[2], SW_SHOW);
+		// 게임 룰, 랭킹 버튼 보이기
+		ShowControl(p_data->button_adress.p_game_rule, SW_SHOW);
+		ShowControl(p_data->button_adress.p_game_rank, SW_SHOW);
 
 		p_data->game_step = SELECTLV;    // 난이도 선택단계로 수정
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
@@ -126,15 +145,32 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			p_data->game_step = PLAYGAME;    // 다음단계로 이동
 
 			// 난이도 선택 버튼 숨기기
-			ShowControl(p_data->p_select_ctrl[0], SW_HIDE);
-			ShowControl(p_data->p_select_ctrl[1], SW_HIDE);
-			ShowControl(p_data->p_select_ctrl[2], SW_HIDE);
+			ShowControl(p_data->button_adress.p_select_ctrl[0], SW_HIDE);
+			ShowControl(p_data->button_adress.p_select_ctrl[1], SW_HIDE);
+			ShowControl(p_data->button_adress.p_select_ctrl[2], SW_HIDE);
+			// 게임 룰, 랭킹 버튼 숨기기
+			ShowControl(p_data->button_adress.p_game_rule, SW_HIDE);
+			ShowControl(p_data->button_adress.p_game_rank, SW_HIDE);
 			// 재시작, 타이틀 버튼 보이기
-			ShowControl(p_data->p_game_ctrl[0], SW_SHOW);
-			ShowControl(p_data->p_game_ctrl[1], SW_SHOW);
+			ShowControl(p_data->button_adress.p_game_ctrl[0], SW_SHOW);
+			ShowControl(p_data->button_adress.p_game_ctrl[1], SW_SHOW);
 
 			p_data->start_time = GetTickCount64();    // 시간 초기화
 		}
+	}
+	else if (a_ctrl_id == RULE) {
+		MessageBox(gh_main_wnd, "*지뢰가 없는 칸을 모두 클릭하면 클리어 됩니다.*\n\n \
+1. 마우스 왼쪽을 누르면 닫혀있는 칸이 열립니다.\n \
+2. 마우스 오른쪽 버튼을 누르면 깃발, 물음표, 닫힌 타일 순으로      토글됩니다.\n \
+3. 마우스 휠 클릭시 주변 8칸의 깃발을 올바르게 찾았다면 주        변 8칸이 열립니다. 잘못 찾았을 시 바로 게임오버가 됩니다.\n \
+4. 숫자가 적힌 타일은 주변 지뢰의 개수를 나타냅니다.", "규칙", MB_ICONINFORMATION | MB_OK);
+	}
+	else if (a_ctrl_id == RANK) {
+		FILE *fp = NULL;
+
+		fopen_s(&fp, "MinesweeperRank.txt", "r");
+
+		fclose(fp);
 	}
 }
 
@@ -234,6 +270,12 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 // 마우스 왼쪽 버튼을 클릭, 해제 그리고 시스템이 기본으로 처리하지 않는 메시지를 처리하는 함수
 ON_MESSAGE(OnMouseLeftDOWN, OnMouseLeftUP, NULL, OnCommand, NULL, OnUserMsg)
 
+// 랭킹 퀵 정렬용 함수
+UINT64 compare(const void *a, const void *b)
+{
+	return *(UINT64 *)a - *(UINT64 *)b;    // 오름차순
+}
+
 int main()
 {
 	// 글꼴, 글자 크기 적용
@@ -253,6 +295,8 @@ int main()
 	CreateSelectLVButton();    // 난이도 선택 버튼 생성
 	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
 
+	writeRank(&data);
+
 	ShowDisplay();    // 화면에 출력
 	return 0;
 }
@@ -262,17 +306,23 @@ void CreateSelectLVButton() {
 	pGameData ap_data = (pGameData)GetAppData();
 
 	// 난이도 선택 버튼 만들고 주소 저장
-	ap_data->p_select_ctrl[0] = CreateButton("쉬움", 10, 100, 98, 120, EASY);
-	ap_data->p_select_ctrl[1] = CreateButton("보통", 110, 100, 98, 120, NORMAL);
-	ap_data->p_select_ctrl[2] = CreateButton("어려움", 210, 100, 98, 120, HARD);
+	ap_data->button_adress.p_select_ctrl[0] = CreateButton("Easy", 10, 100, 98, 120, EASY);
+	ap_data->button_adress.p_select_ctrl[1] = CreateButton("Normal", 110, 100, 98, 120, NORMAL);
+	ap_data->button_adress.p_select_ctrl[2] = CreateButton("Hard", 210, 100, 98, 120, HARD);
+
+	// 게임 룰 버튼 만들고 주소 저장
+	ap_data->button_adress.p_game_rule = CreateButton("Rule", 500, 50, 50, 50, RULE);
+
+	// 랭킹 버튼 만들고 주소 저장
+	ap_data->button_adress.p_game_rank = CreateButton("Rank", 500, 400, 50, 50, RANK);
 
 	// 재시작, 타이틀 버튼 만들고 주소 저장
-	ap_data->p_game_ctrl[0] = CreateButton("Restart", 70, 490, 100, 40, RESTART);
-	ap_data->p_game_ctrl[1] = CreateButton("Title", 180, 490, 100, 40, TITLE);
+	ap_data->button_adress.p_game_ctrl[0] = CreateButton("Restart", 70, 490, 100, 40, RESTART);
+	ap_data->button_adress.p_game_ctrl[1] = CreateButton("Title", 180, 490, 100, 40, TITLE);
 
 	// 재시작, 타이틀 버튼 숨기기
-	ShowControl(ap_data->p_game_ctrl[0], SW_HIDE);
-	ShowControl(ap_data->p_game_ctrl[1], SW_HIDE);
+	ShowControl(ap_data->button_adress.p_game_ctrl[0], SW_HIDE);
+	ShowControl(ap_data->button_adress.p_game_ctrl[1], SW_HIDE);
 }
 
 // 클릭 생태를 저장하는 판 초기화
@@ -411,8 +461,12 @@ void checkClear(pGameData ap_data)
 // 게임 클리어 시간 랭킹 작성
 void writeRank(pGameData ap_data)
 {
-	// TODO 파일 만들고 텍스트 파일에 시간 저장
-	int time = ap_data->curr_time;
+	Rank rank;
+	FILE *fp = NULL;
+
+	fopen_s(&fp, "MinesweeperRank.txt", "r");
+
+	fclose(fp);
 }
 
 // 아무것도 없는 판을 연쇄적으로 열기
