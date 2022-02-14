@@ -158,6 +158,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			p_data->start_time = GetTickCount64();    // 시간 초기화
 		}
 	}
+	// 룰 버튼 클릭 시 
 	else if (a_ctrl_id == RULE) {
 		MessageBox(gh_main_wnd, "*지뢰가 없는 칸을 모두 클릭하면 클리어 됩니다.*\n\n \
 1. 마우스 왼쪽을 누르면 닫혀있는 칸이 열립니다.\n \
@@ -181,36 +182,38 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			ShowControl(p_data->button_adress.p_game_ctrl[1], SW_HIDE);
 			
 			Rank data;
-			FILE *fp = NULL;
 
+			FILE *fp = NULL;
 			fopen_s(&fp, "MinesweeperRank.bin", "rb");
 
 			fread(&data, sizeof(Rank), 1, fp);
 			
 			for (int i = 0; i < 3; i++) {
 				for (int j = 0; j < 10; j++) {
-					TextOut(10 + (200 * i), 150 + (28 * j), "%d", data.rank[i][j]);
+					TextOut(10 + (250 * i), 150 + (28 * j), "%llu", data.rank[i][j]);
 				}
 			}
-			
+
 			fclose(fp);
+			
 			break;
 		}
 		default:
 			Clear();
-			// 난이도 선택 버튼 숨기기
+			TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
+			// 난이도 선택 버튼 보이기
 			ShowControl(p_data->button_adress.p_select_ctrl[0], SW_SHOW);
 			ShowControl(p_data->button_adress.p_select_ctrl[1], SW_SHOW);
 			ShowControl(p_data->button_adress.p_select_ctrl[2], SW_SHOW);
-			// 게임 룰 버튼 숨기기
+			// 게임 룰 버튼 보이기
 			ShowControl(p_data->button_adress.p_game_rule, SW_SHOW);
-			// 재시작, 타이틀 버튼 숨기기
+			// 재시작, 타이틀 버튼 보이기
 			ShowControl(p_data->button_adress.p_game_ctrl[0], SW_SHOW);
 			ShowControl(p_data->button_adress.p_game_ctrl[1], SW_SHOW);
 			break;
 		}
 
-		p_data->rankB_toggle ? p_data->rankB_toggle-- : p_data->rankB_toggle++;
+		p_data->rankB_toggle = !p_data->rankB_toggle;
 		ShowDisplay();
 	}
 }
@@ -326,28 +329,26 @@ int main()
 					  0, SELECTLV, 0, 0 };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 
-	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
-	CreateSelectLVButton();    // 난이도 선택 버튼 생성
-	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
-
-
 	FILE *fp = NULL;
 
 	// 랭킹 파일이 없으면 파일을 만들고 모두 UINT64의 최대값으로 초기화
 	// 파일이 있으면 0을 반환
-	if (fopen_s(&fp, "MinesweeperRank.bin", "wb")) {
-		Rank temp;
+	fopen_s(&fp, "MinesweeperRank.bin", "wb");
+	Rank temp;
 
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 10; j++) {
-				temp.rank[i][j] = ULLONG_MAX;
-			}
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 10; j++) {
+			temp.rank[i][j] = ULLONG_MAX;
 		}
-
-		fwrite(&temp, sizeof(Rank), 1, fp);
-
-		fclose(fp);
 	}
+
+	fwrite(&temp, sizeof(Rank), 1, fp);
+
+	fclose(fp);
+
+	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
+	CreateSelectLVButton();    // 난이도 선택 버튼 생성
+	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
 
 	ShowDisplay();    // 화면에 출력
 	return 0;
@@ -519,7 +520,7 @@ void writeRank(pGameData ap_data)
 	FILE *fp = NULL;
 
 	// data로 파일 읽기
-	fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 쓰기 용도로 열기
+	fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 읽기 용도로 열기
 
 	fread(&data, sizeof(Rank), 1, fp);    // rank 구조체로 파일 읽기
 
@@ -543,8 +544,8 @@ void bubble_sort(UINT64 arr[])
 {
 	UINT64 temp;
 
-	for (int i = 0; i < 5; i++) {
-		for (int j = 0; j < 5 - 1; j++) {
+	for (int i = 0; i <10; i++) {
+		for (int j = 0; j < 10 - i; j++) {
 			if (arr[j] >= arr[j + 1]) {
 				temp = arr[j];
 				arr[j] = arr[j + 1];
