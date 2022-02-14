@@ -8,11 +8,8 @@
 #pragma pack(push, 1)
 typedef struct _Rank
 {
-	UINT64 easy_rank[10];
-	UINT64 normal_rank[10];
-	UINT64 hard_rank[10];
+	UINT64 rank[3][10];
 } Rank, *pRank;
-#pragma pack(pop)
 
 typedef struct _GameButton
 {
@@ -33,12 +30,14 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	BYTE mineNum[3];      // 지뢰의 개수
 	BYTE currFlagNum;     // 현재 깃발의 개수
 	BYTE game_step;       // 현재 게임 단계
+	BYTE rankB_toggle;    // 랭킹 버튼 토글용 변수
 	WORD level;           // 선택한 난이도
 	UINT64 start_time;    // 시작 시간
 	UINT64 curr_time;     // 현재 시간
 	POINT temp_pos;       // 임시 커서 좌표
 	GameButton button_adress;    // 게임 버튼 주소 모아놓은 구조체
 } GameData, *pGameData;
+#pragma pack(pop)
 
 void CreateSelectLVButton();    // 난이도 선택 버튼 생성
 void resetClickState(pGameData ap_data);    // 클릭 상태 초기화
@@ -47,6 +46,7 @@ void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
 void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
 void checkClear(pGameData ap_data);    // 클리어 확인
 void writeRank(pGameData ap_data);    // 랭킹 작성
+void bubble_sort(UINT64 data[]);    // 랭킹 정렬
 void openNothingClosed(pGameData ap_data, int x_pos, int y_pos);    // 연쇄적으로 판 오픈
 void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
 void checkAndOpen8Board(pGameData ap_data, int x, int y);    // 올바르게 깃발을 놓고 휠을 누르면 근처 8개의판이 열림
@@ -58,7 +58,7 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 
 	if (ap_data->game_step == PLAYGAME) {    // 게임중일 때만
 		ap_data->curr_time = GetTickCount64() - ap_data->start_time;    // 현재 시간 구하기
-		Rectangle(5, 495, 50, 523, WHITE, WHITE);    // 숫자 지우는 용도
+		Rectangle(5, 495, 50, 533, WHITE, WHITE);    // 숫자 지우는 용도
 		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
 		ShowDisplay();
 	}
@@ -166,11 +166,52 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 4. 숫자가 적힌 타일은 주변 지뢰의 개수를 나타냅니다.", "규칙", MB_ICONINFORMATION | MB_OK);
 	}
 	else if (a_ctrl_id == RANK) {
-		FILE *fp = NULL;
+		switch (p_data->rankB_toggle) {
+		case 0:
+		{
+			Clear();
+			// 난이도 선택 버튼 숨기기
+			ShowControl(p_data->button_adress.p_select_ctrl[0], SW_HIDE);
+			ShowControl(p_data->button_adress.p_select_ctrl[1], SW_HIDE);
+			ShowControl(p_data->button_adress.p_select_ctrl[2], SW_HIDE);
+			// 게임 룰 버튼 숨기기
+			ShowControl(p_data->button_adress.p_game_rule, SW_HIDE);
+			// 재시작, 타이틀 버튼 숨기기
+			ShowControl(p_data->button_adress.p_game_ctrl[0], SW_HIDE);
+			ShowControl(p_data->button_adress.p_game_ctrl[1], SW_HIDE);
+			
+			Rank data;
+			FILE *fp = NULL;
 
-		fopen_s(&fp, "MinesweeperRank.txt", "r");
+			fopen_s(&fp, "MinesweeperRank.bin", "rb");
 
-		fclose(fp);
+			fread(&data, sizeof(Rank), 1, fp);
+			
+			for (int i = 0; i < 3; i++) {
+				for (int j = 0; j < 10; j++) {
+					TextOut(10 + (200 * i), 150 + (28 * j), "%d", data.rank[i][j]);
+				}
+			}
+			
+			fclose(fp);
+			break;
+		}
+		default:
+			Clear();
+			// 난이도 선택 버튼 숨기기
+			ShowControl(p_data->button_adress.p_select_ctrl[0], SW_SHOW);
+			ShowControl(p_data->button_adress.p_select_ctrl[1], SW_SHOW);
+			ShowControl(p_data->button_adress.p_select_ctrl[2], SW_SHOW);
+			// 게임 룰 버튼 숨기기
+			ShowControl(p_data->button_adress.p_game_rule, SW_SHOW);
+			// 재시작, 타이틀 버튼 숨기기
+			ShowControl(p_data->button_adress.p_game_ctrl[0], SW_SHOW);
+			ShowControl(p_data->button_adress.p_game_ctrl[1], SW_SHOW);
+			break;
+		}
+
+		p_data->rankB_toggle ? p_data->rankB_toggle-- : p_data->rankB_toggle++;
+		ShowDisplay();
 	}
 }
 
@@ -270,12 +311,6 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 // 마우스 왼쪽 버튼을 클릭, 해제 그리고 시스템이 기본으로 처리하지 않는 메시지를 처리하는 함수
 ON_MESSAGE(OnMouseLeftDOWN, OnMouseLeftUP, NULL, OnCommand, NULL, OnUserMsg)
 
-// 랭킹 퀵 정렬용 함수
-UINT64 compare(const void *a, const void *b)
-{
-	return *(UINT64 *)a - *(UINT64 *)b;    // 오름차순
-}
-
 int main()
 {
 	// 글꼴, 글자 크기 적용
@@ -288,20 +323,37 @@ int main()
 					  { EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT   },    // x축 타일의 개수
 					  { EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT   },    // y축 타일의 개수
 					  { EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM  },    // 지뢰의 개수
-					  0, SELECTLV, 0 };
+					  0, SELECTLV, 0, 0 };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 
 	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
 	CreateSelectLVButton();    // 난이도 선택 버튼 생성
 	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
 
-	writeRank(&data);
+
+	FILE *fp = NULL;
+
+	// 랭킹 파일이 없으면 파일을 만들고 모두 UINT64의 최대값으로 초기화
+	// 파일이 있으면 0을 반환
+	if (fopen_s(&fp, "MinesweeperRank.bin", "wb")) {
+		Rank temp;
+
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 10; j++) {
+				temp.rank[i][j] = ULLONG_MAX;
+			}
+		}
+
+		fwrite(&temp, sizeof(Rank), 1, fp);
+
+		fclose(fp);
+	}
 
 	ShowDisplay();    // 화면에 출력
 	return 0;
 }
 
-// 난이도 선택 버튼 생성
+// 선택 버튼 생성
 void CreateSelectLVButton() {
 	pGameData ap_data = (pGameData)GetAppData();
 
@@ -310,11 +362,11 @@ void CreateSelectLVButton() {
 	ap_data->button_adress.p_select_ctrl[1] = CreateButton("Normal", 110, 100, 98, 120, NORMAL);
 	ap_data->button_adress.p_select_ctrl[2] = CreateButton("Hard", 210, 100, 98, 120, HARD);
 
-	// 게임 룰 버튼 만들고 주소 저장
-	ap_data->button_adress.p_game_rule = CreateButton("Rule", 500, 50, 50, 50, RULE);
-
 	// 랭킹 버튼 만들고 주소 저장
-	ap_data->button_adress.p_game_rank = CreateButton("Rank", 500, 400, 50, 50, RANK);
+	ap_data->button_adress.p_game_rank = CreateButton("Rank", 700, 50, 50, 50, RANK);
+
+	// 게임 룰 버튼 만들고 주소 저장
+	ap_data->button_adress.p_game_rule = CreateButton("Rule", 310, 100, 50, 50, RULE);
 
 	// 재시작, 타이틀 버튼 만들고 주소 저장
 	ap_data->button_adress.p_game_ctrl[0] = CreateButton("Restart", 70, 490, 100, 40, RESTART);
@@ -454,19 +506,52 @@ void checkClear(pGameData ap_data)
 		}
 	}
 
-	if (closedTile == ap_data->mineNum[ap_data->level - 1000])    // 닫힌 타일의 개수가 지뢰의 개수와 같으면
+	if (closedTile == ap_data->mineNum[ap_data->level - 1000]) {    // 닫힌 타일의 개수가 지뢰의 개수와 같으면
 		ap_data->game_step = CLEARGME;    // 게임 단계를 클리어로 수정
+		writeRank(ap_data);
+	}
 }
 
 // 게임 클리어 시간 랭킹 작성
 void writeRank(pGameData ap_data)
 {
-	Rank rank;
+	Rank data;
 	FILE *fp = NULL;
 
-	fopen_s(&fp, "MinesweeperRank.txt", "r");
+	// data로 파일 읽기
+	fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 쓰기 용도로 열기
 
-	fclose(fp);
+	fread(&data, sizeof(Rank), 1, fp);    // rank 구조체로 파일 읽기
+
+	fclose(fp);    // 파일 닫기
+
+	// 랭킹 업데이트
+	if (ap_data->curr_time < data.rank[ap_data->level - 1000][9]) {    // 랭킹 10위 이내에 들면
+		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
+
+		data.rank[ap_data->level - 1000][9] = ap_data->curr_time;
+		bubble_sort(data.rank[ap_data->level - 1000]);
+
+		fwrite(&data, sizeof(Rank), 1, fp);    // rank 구조체로 파일 읽기
+
+		fclose(fp);    // 파일 닫기
+	}
+}
+
+// 랭킹 정렬
+void bubble_sort(UINT64 arr[])
+{
+	UINT64 temp;
+
+	for (int i = 0; i < 5; i++) {
+		for (int j = 0; j < 5 - 1; j++) {
+			if (arr[j] >= arr[j + 1]) {
+				temp = arr[j];
+				arr[j] = arr[j + 1];
+				arr[j + 1] = temp;
+			}
+		}
+	}
 }
 
 // 아무것도 없는 판을 연쇄적으로 열기
