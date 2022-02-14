@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include <stdio.h>       // 파일 입출력, 로컬 랭킹 기록용
+#include <sys/stat.h>    // 파일이 있는지 확인하기 위한 stat가 들어있는 헤더파일
 #include "tipsware.h"
 #include "Constant.h"    // 필요한 상수를 모아놓은 헤더파일
 #include <Windowsx.h>    // lParam의 값을 x, y좌표로 바꾸기 위한 매크로가 들어있는 헤더파일
@@ -364,24 +365,27 @@ int main()
 					  { EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM  },    // 지뢰의 개수
 					  0, SELECTLV, 0, 0 };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
-	/*
+	
 	FILE *fp = NULL;    // 파일 포인터 생성
-
-	// 랭킹 파일이 없으면 파일을 만들고 모두 UINT64의 최대값으로 초기화
-	// 파일이 있으면 0을 반환
-	fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 형식으로 열기
 	Rank temp;    // 임시 변수
+	struct stat buffer;
 
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 10; j++) {
-			temp.rank[i][j] = ULLONG_MAX;    // 가장 큰 값으로 초기화
+	if (stat("MinesweeperRank.bin", &buffer) == -1) {
+		// 랭킹 파일이 없으면 파일을 만들고 모두 UINT64의 최대값으로 초기화
+		// 파일이 있으면 0을 반환
+		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 형식으로 열기
+
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 10; j++) {
+				temp.rank[i][j] = ULLONG_MAX;    // 가장 큰 값으로 초기화
+			}
 		}
+
+		fwrite(&temp, sizeof(Rank), 1, fp);    // 초기화 후 파일 작성
+
+		fclose(fp);    // 파일 닫기
 	}
-
-	fwrite(&temp, sizeof(Rank), 1, fp);    // 초기화 후 파일 작성
-
-	fclose(fp);    // 파일 닫기
-	*/
+	
 	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
 	CreateSelectLVButton();    // 난이도 선택 버튼 생성
 	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
@@ -400,7 +404,7 @@ void CreateSelectLVButton() {
 	ap_data->button_adress.p_select_ctrl[2] = CreateButton("Hard", 210, 100, 98, 120, HARD);        // 어려움
 	// 랭킹, 랭킹 초기화 버튼 만들고 주소 저장
 	ap_data->button_adress.p_game_rank = CreateButton("Rank", 700, 50, 50, 50, RANK);          // 랭킹
-	ap_data->button_adress.p_clear_rank = CreateButton("Clear", 700, 110, 50, 50, CLEARRANK);    // 랭킹 초기화
+	ap_data->button_adress.p_clear_rank = CreateButton("Clear", 700, 500, 50, 50, CLEARRANK);    // 랭킹 초기화
 	// 게임 룰 버튼 만들고 주소 저장
 	ap_data->button_adress.p_game_rule = CreateButton("Rule", 310, 100, 50, 50, RULE);    // 규칙
 	// 재시작, 타이틀 버튼 만들고 주소 저장
