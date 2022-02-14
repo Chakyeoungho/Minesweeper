@@ -17,6 +17,7 @@ typedef struct _GameButton
 	void *p_game_ctrl[2];      // 재시작, 타이틀 버튼 주소
 	void *p_game_rank;         // 랭킹 버튼 주소
 	void *p_game_rule;         // 게임 규칙 버튼 주소
+	void *p_clear_rank;        // 랭킹 초기화
 } GameButton, *pGameButton;
 
 typedef struct _GameData // 게임 플레이중 필요한 데이터
@@ -177,6 +178,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			ShowControl(p_data->button_adress.p_select_ctrl[2], SW_HIDE);
 			// 게임 룰 버튼 숨기기
 			ShowControl(p_data->button_adress.p_game_rule, SW_HIDE);
+			// 랭킹 초기화 버튼 보이기
+			ShowControl(p_data->button_adress.p_clear_rank, SW_SHOW);
 			
 			Rank data;
 
@@ -213,10 +216,40 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			ShowControl(p_data->button_adress.p_select_ctrl[2], SW_SHOW);
 			// 게임 룰 버튼 보이기
 			ShowControl(p_data->button_adress.p_game_rule, SW_SHOW);
+			// 랭킹 초기화 버튼 숨기기
+			ShowControl(p_data->button_adress.p_clear_rank, SW_HIDE);
 			break;
 		}
 
 		p_data->rankB_toggle = !p_data->rankB_toggle;
+		ShowDisplay();
+	}
+	else if (a_ctrl_id == CLEARRANK) {
+		Clear();    // 화면 초기화
+
+		Rank data;    // 임시 변수
+		FILE *fp = NULL;    // 파일 포인터 생성
+		fopen_s(&fp, "MinesweeperRank.bin", "wb");
+
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 10; j++) {
+				data.rank[i][j] = ULLONG_MAX;    // 가장 큰 값으로 초기화
+			}
+		}
+
+		TextOut(120, 100, "Easy");
+		TextOut(320, 100, "Normal");
+		TextOut(520, 100, "Hard");
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 10; j++) {
+				TextOut(120 + (200 * i), 150 + (28 * j), "empty");
+				TextOut(30, 150 + (28 * j), "%2d.", j + 1);
+			}
+		}
+
+		fwrite(&data, sizeof(Rank), 1, fp);    // 초기화 후 파일 작성
+
+		fclose(fp);    // 파일 닫기
 		ShowDisplay();
 	}
 }
@@ -362,23 +395,23 @@ void CreateSelectLVButton() {
 	pGameData ap_data = (pGameData)GetAppData();
 
 	// 난이도 선택 버튼 만들고 주소 저장
-	ap_data->button_adress.p_select_ctrl[0] = CreateButton("Easy", 10, 100, 98, 120, EASY);
-	ap_data->button_adress.p_select_ctrl[1] = CreateButton("Normal", 110, 100, 98, 120, NORMAL);
-	ap_data->button_adress.p_select_ctrl[2] = CreateButton("Hard", 210, 100, 98, 120, HARD);
-
-	// 랭킹 버튼 만들고 주소 저장
-	ap_data->button_adress.p_game_rank = CreateButton("Rank", 700, 50, 50, 50, RANK);
-
+	ap_data->button_adress.p_select_ctrl[0] = CreateButton("Easy", 10, 100, 98, 120, EASY);         // 쉬움
+	ap_data->button_adress.p_select_ctrl[1] = CreateButton("Normal", 110, 100, 98, 120, NORMAL);    // 보통
+	ap_data->button_adress.p_select_ctrl[2] = CreateButton("Hard", 210, 100, 98, 120, HARD);        // 어려움
+	// 랭킹, 랭킹 초기화 버튼 만들고 주소 저장
+	ap_data->button_adress.p_game_rank = CreateButton("Rank", 700, 50, 50, 50, RANK);          // 랭킹
+	ap_data->button_adress.p_clear_rank = CreateButton("Clear", 700, 110, 50, 50, CLEARRANK);    // 랭킹 초기화
 	// 게임 룰 버튼 만들고 주소 저장
-	ap_data->button_adress.p_game_rule = CreateButton("Rule", 310, 100, 50, 50, RULE);
-
+	ap_data->button_adress.p_game_rule = CreateButton("Rule", 310, 100, 50, 50, RULE);    // 규칙
 	// 재시작, 타이틀 버튼 만들고 주소 저장
-	ap_data->button_adress.p_game_ctrl[0] = CreateButton("Restart", 70, 490, 100, 40, RESTART);
-	ap_data->button_adress.p_game_ctrl[1] = CreateButton("Title", 180, 490, 100, 40, TITLE);
+	ap_data->button_adress.p_game_ctrl[0] = CreateButton("Restart", 70, 490, 100, 40, RESTART);    // 재시작
+	ap_data->button_adress.p_game_ctrl[1] = CreateButton("Title", 180, 490, 100, 40, TITLE);       // 타이틀
 
 	// 재시작, 타이틀 버튼 숨기기
 	ShowControl(ap_data->button_adress.p_game_ctrl[0], SW_HIDE);
 	ShowControl(ap_data->button_adress.p_game_ctrl[1], SW_HIDE);
+	// 랭킹 초기화 버튼 숨기기
+	ShowControl(ap_data->button_adress.p_clear_rank, SW_HIDE);
 }
 
 // 클릭 생태를 저장하는 판 초기화
