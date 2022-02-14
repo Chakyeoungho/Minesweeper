@@ -185,9 +185,19 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 
 			fread(&data, sizeof(Rank), 1, fp);
 			
+			TextOut(120, 100, "Easy");
+			TextOut(320, 100, "Normal");
+			TextOut(520, 100, "Hard");
 			for (int i = 0; i < 3; i++) {
 				for (int j = 0; j < 10; j++) {
-					TextOut(10 + (250 * i), 150 + (28 * j), "%02llu'%02llu\"%03llu", data.rank[i][j] / 60000, (data.rank[i][j] % 60000) / 1000, data.rank[i][j] % 1000);
+					switch (data.rank[i][j]) {
+					case ULLONG_MAX:
+						TextOut(120 + (200 * i), 150 + (28 * j), "empty");
+						break;
+					default:
+						TextOut(120 + (200 * i), 150 + (28 * j), "%02llu'%02llu\"%03llu", data.rank[i][j] / 60000, (data.rank[i][j] % 60000) / 1000, data.rank[i][j] % 1000);
+					}
+					TextOut(30, 150 + (28 * j), "%2d.", j + 1);
 				}
 			}
 
@@ -326,18 +336,18 @@ int main()
 
 	// 랭킹 파일이 없으면 파일을 만들고 모두 UINT64의 최대값으로 초기화
 	// 파일이 있으면 0을 반환
-	fopen_s(&fp, "MinesweeperRank.bin", "wb");
-	Rank temp;
+	fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 형식으로 열기
+	Rank temp;    // 임시 변수
 
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 10; j++) {
-			temp.rank[i][j] = ULLONG_MAX;
+			temp.rank[i][j] = ULLONG_MAX;    // 가장 큰 값으로 초기화
 		}
 	}
 
-	fwrite(&temp, sizeof(Rank), 1, fp);
+	fwrite(&temp, sizeof(Rank), 1, fp);    // 초기화 후 파일 작성
 
-	fclose(fp);
+	fclose(fp);    // 파일 닫기
 
 	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
 	CreateSelectLVButton();    // 난이도 선택 버튼 생성
