@@ -331,8 +331,8 @@ int main()
 					  { EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM  },    // 지뢰의 개수
 					  0, SELECTLV, 0, 0 };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
-
-	FILE *fp = NULL;
+	/*
+	FILE *fp = NULL;    // 파일 포인터 생성
 
 	// 랭킹 파일이 없으면 파일을 만들고 모두 UINT64의 최대값으로 초기화
 	// 파일이 있으면 0을 반환
@@ -348,7 +348,7 @@ int main()
 	fwrite(&temp, sizeof(Rank), 1, fp);    // 초기화 후 파일 작성
 
 	fclose(fp);    // 파일 닫기
-
+	*/
 	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
 	CreateSelectLVButton();    // 난이도 선택 버튼 생성
 	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
