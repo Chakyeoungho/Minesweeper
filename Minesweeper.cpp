@@ -97,7 +97,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 		// 좌클릭으로 판 열기
 		if (a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
 			a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
-			// 첫 클릭 때 시간 초기화
+			// 첫 클릭 시 시간 초기화
 			if (p_data->isClicked == false) {
 				p_data->start_time = GetTickCount64();    // 시작 시간 재설정
 				p_data->isClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
@@ -354,7 +354,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 
 			if (x_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] && 
 				y_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
-				// 첫 클릭 때 시간 초기화
+				// 첫 클릭 시 시간 초기화
 				if (p_data->isClicked == false) {
 					p_data->start_time = GetTickCount64();    // 시작 시간 재설정
 					p_data->isClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
