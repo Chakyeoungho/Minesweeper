@@ -48,7 +48,7 @@ void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
 void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
 void checkClear(pGameData ap_data);    // 클리어 확인
 void writeRank(pGameData ap_data);    // 랭킹 작성
-void bubble_sort(UINT64 data[]);    // 랭킹 정렬
+void bubble_sort(UINT64 data[], int count);    // 랭킹 정렬
 void openNothingClosed(pGameData ap_data, int x_pos, int y_pos);    // 연쇄적으로 판 오픈
 void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
 void checkAndOpen8Board(pGameData ap_data, int x, int y);    // 올바르게 깃발을 놓고 휠을 누르면 근처 8개의판이 열림
@@ -193,17 +193,17 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			TextOut(120, 100, "Easy");
 			TextOut(320, 100, "Normal");
 			TextOut(520, 100, "Hard");
-			for (int i = 0; i < 3; i++) {
-				for (int j = 0; j < 10; j++) {
-					switch (data.rank[i][j]) {
+			for (int i = 0; i < 10; i++) {
+				for (int j = 0; j < 3; j++) {
+					switch (data.rank[j][i]) {
 					case ULLONG_MAX:
-						TextOut(120 + (200 * i), 150 + (28 * j), "empty");
+						TextOut(120 + (200 * j), 150 + (28 * i), "empty");
 						break;
 					default:
-						TextOut(120 + (200 * i), 150 + (28 * j), "%02llu'%02llu\"%03llu", data.rank[i][j] / 60000, (data.rank[i][j] % 60000) / 1000, data.rank[i][j] % 1000);
+						TextOut(120 + (200 * j), 150 + (28 * i), "%02llu'%02llu\"%03llu", data.rank[j][i] / 60000, (data.rank[j][i] % 60000) / 1000, data.rank[j][i] % 1000);
 					}
-					TextOut(30, 150 + (28 * j), "%2d.", j + 1);
 				}
+				TextOut(30, 150 + (28 * i), "%2d.", i + 1);
 			}
 
 			fclose(fp);
@@ -243,11 +243,11 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		TextOut(120, 100, "Easy");
 		TextOut(320, 100, "Normal");
 		TextOut(520, 100, "Hard");
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 10; j++) {
-				TextOut(120 + (200 * i), 150 + (28 * j), "empty");
-				TextOut(30, 150 + (28 * j), "%2d.", j + 1);
+		for (int i = 0; i < 10; i++) {
+			for (int j = 0; j < 3; j++) {
+				TextOut(120 + (200 * j), 150 + (28 * i), "empty");
 			}
+			TextOut(30, 150 + (28 * i), "%2d.", i + 1);
 		}
 
 		fwrite(&data, sizeof(Rank), 1, fp);    // 초기화 후 파일 작성
@@ -573,7 +573,7 @@ void writeRank(pGameData ap_data)
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
 
 		data.rank[ap_data->level - 1000][9] = ap_data->curr_time;
-		bubble_sort(data.rank[ap_data->level - 1000]);
+		bubble_sort(data.rank[ap_data->level - 1000], 10);
 
 		fwrite(&data, sizeof(Rank), 1, fp);    // rank 구조체로 파일 읽기
 
@@ -582,12 +582,12 @@ void writeRank(pGameData ap_data)
 }
 
 // 랭킹 정렬
-void bubble_sort(UINT64 arr[])
+void bubble_sort(UINT64 arr[], int count)
 {
 	UINT64 temp;
 
-	for (int i = 0; i <10; i++) {
-		for (int j = 0; j < 10 - i; j++) {
+	for (int i = 0; i < count; i++) {
+		for (int j = 0; j < count - 1 - i; j++) {
 			if (arr[j] >= arr[j + 1]) {
 				temp = arr[j];
 				arr[j] = arr[j + 1];
