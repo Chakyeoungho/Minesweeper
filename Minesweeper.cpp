@@ -61,7 +61,7 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 
 	if (ap_data->game_step == PLAYGAME && ap_data->isClicked) {    // 게임 중, 첫 클릭을 했을 때만
 		ap_data->curr_time = GetTickCount64() - ap_data->start_time;    // 현재 시간 구하기
-		Rectangle(5, 495, 50, 533, WHITE, WHITE);    // 숫자 지우는 용도
+		Rectangle(5, 495, 67, 523, WHITE, WHITE);    // 숫자 지우는 용도
 		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
 		ShowDisplay();    // 화면에 출력
 	}
