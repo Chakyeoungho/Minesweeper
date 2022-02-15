@@ -9,7 +9,7 @@
 #pragma pack(push, 1)
 typedef struct _Rank
 {
-	UINT64 rank[3][10];    // 랭킹 저장할 배열
+	UINT64 rank[3][10];    // 랭킹 저장할 배열, 정렬하기 편하게 가로 세로의 값을 정함
 } Rank, *pRank;
 
 typedef struct _GameButton
@@ -63,7 +63,7 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 		ap_data->curr_time = GetTickCount64() - ap_data->start_time;    // 현재 시간 구하기
 		Rectangle(5, 495, 50, 533, WHITE, WHITE);    // 숫자 지우는 용도
 		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
-		ShowDisplay();
+		ShowDisplay();    // 화면에 출력
 	}
 }
 
@@ -103,7 +103,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 				p_data->isClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
 			}
 
-			clickBoard(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);
+			clickBoard(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);    // 판 클릭
 			checkClear(p_data);    // 클리어 했는지 확인
 		}
 		drawBoard(p_data);    // 판 그리기
@@ -144,36 +144,34 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		ShowControl(p_data->button_adress.p_game_rule, SW_SHOW);
 		ShowControl(p_data->button_adress.p_game_rank, SW_SHOW);
 
-		p_data->game_step = SELECTLV;    // 난이도 선택단계로 수정
-		p_data->currFlagNum = 0;    // 깃발 개수 초기화
 		memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
+		p_data->currFlagNum = 0;    // 깃발 개수 초기화
+		p_data->isClicked = false;    // 첫 클릭 안한것으로 수정
+		p_data->game_step = SELECTLV;    // 난이도 선택단계로 수정
 		ShowDisplay();
 		break;
 	// 난이도 버튼
 	case EASY: case NORMAL: case HARD:
-		if (p_data->game_step == SELECTLV) {
-			p_data->level = a_ctrl_id;    // 선택한 난이도 저장
-			randMine(p_data);    // 지뢰 랜덤으로 생성
-			p_data->isClicked = false;    // 첫 클릭 안한것으로 수정
-			p_data->game_step = PLAYGAME;    // 다음단계로 이동
+		p_data->level = a_ctrl_id;    // 선택한 난이도 저장
+		randMine(p_data);    // 지뢰 랜덤으로 생성
+		p_data->game_step = PLAYGAME;    // 다음단계로 이동
 
-			// 난이도 선택 버튼 숨기기
-			ShowControl(p_data->button_adress.p_select_ctrl[0], SW_HIDE);
-			ShowControl(p_data->button_adress.p_select_ctrl[1], SW_HIDE);
-			ShowControl(p_data->button_adress.p_select_ctrl[2], SW_HIDE);
-			// 게임 룰, 랭킹 버튼 숨기기
-			ShowControl(p_data->button_adress.p_game_rule, SW_HIDE);
-			ShowControl(p_data->button_adress.p_game_rank, SW_HIDE);
-			// 재시작, 타이틀 버튼 보이기
-			ShowControl(p_data->button_adress.p_game_ctrl[0], SW_SHOW);
-			ShowControl(p_data->button_adress.p_game_ctrl[1], SW_SHOW);
+		// 난이도 선택 버튼 숨기기
+		ShowControl(p_data->button_adress.p_select_ctrl[0], SW_HIDE);
+		ShowControl(p_data->button_adress.p_select_ctrl[1], SW_HIDE);
+		ShowControl(p_data->button_adress.p_select_ctrl[2], SW_HIDE);
+		// 게임 룰, 랭킹 버튼 숨기기
+		ShowControl(p_data->button_adress.p_game_rule, SW_HIDE);
+		ShowControl(p_data->button_adress.p_game_rank, SW_HIDE);
+		// 재시작, 타이틀 버튼 보이기
+		ShowControl(p_data->button_adress.p_game_ctrl[0], SW_SHOW);
+		ShowControl(p_data->button_adress.p_game_ctrl[1], SW_SHOW);
 
-			p_data->start_time = GetTickCount64();    // 시간 초기화
-			p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
-			drawBoard(p_data);    // 판 그리기
-		}
+		p_data->start_time = GetTickCount64();    // 시간 초기화
+		p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
+		drawBoard(p_data);    // 판 그리기
 		break;
-	// 룰 버튼
+		// 룰 버튼
 	case RULE:
 		MessageBox(gh_main_wnd, "        **지뢰가 없는 칸을 모두 클릭하면 클리어 됩니다.**\n\n \
 1. 마우스 왼쪽을 누르면 닫혀있는 칸이 열립니다.\n \
@@ -196,32 +194,34 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			// 랭킹 초기화 버튼 보이기
 			ShowControl(p_data->button_adress.p_clear_rank, SW_SHOW);
 
-			Rank data;
+			Rank data;    // 랭킹 저장할 구조체 변수 선언
 			FILE *fp = NULL;    // 파일 포인터 생성
 			fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 바이너리 읽기 모드로 열기
 
+			// data에 파일 읽기, 읽기 실패시 닫고 종료
 			if (fread(&data, sizeof(Rank), 1, fp) < 1) {
-				fclose(fp);
-				return;
+				fclose(fp);    // 파일 닫기
+				return;    // 종료
 			}
 
-			TextOut(120, 100, "Easy");
-			TextOut(320, 100, "Normal");
-			TextOut(520, 100, "Hard");
+			TextOut(120, 100, "Easy");      // 쉬움
+			TextOut(320, 100, "Normal");    // 보통
+			TextOut(520, 100, "Hard");      // 어려움
 			for (int i = 0; i < 10; i++) {
 				for (int j = 0; j < 3; j++) {
 					switch (data.rank[j][i]) {
-					case ULLONG_MAX:
+					case ULLONG_MAX:    // 최대값이면 랭킹이 없는 것으로 간주
 						TextOut(120 + (200 * j), 150 + (28 * i), "empty");
 						break;
-					default:
+					default:    // 쵀대값이 아니면 시간을 구해 출력
 						TextOut(120 + (200 * j), 150 + (28 * i), "%02llu'%02llu\"%03llu", data.rank[j][i] / 60000, (data.rank[j][i] % 60000) / 1000, data.rank[j][i] % 1000);
+						break;
 					}
 				}
-				TextOut(30, 150 + (28 * i), "%2d.", i + 1);
+				TextOut(30, 150 + (28 * i), "%2d.", i + 1);    // 랭킹 순서 출력 -> 1 ~ 10
 			}
 
-			fclose(fp);
+			fclose(fp);    // 파일 닫기
 			break;
 		}    // 중괄호로 감싸줘야 파일을 사용할 수 있읍
 		default:
@@ -245,29 +245,30 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 	case CLEARRANK:
 		Clear();    // 화면 초기화
 
-		Rank data;
+		Rank data;    // 랭킹 저장할 구조체 변수 선언
 		FILE *fp = NULL;    // 파일 포인터 생성
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 모드로 열기
 
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 10; j++) {
-				data.rank[i][j] = ULLONG_MAX;    // 가장 큰 값으로 초기화
+				data.rank[i][j] = ULLONG_MAX;    // 자료형의 최대값으로 초기화
 			}
 		}
 
-		TextOut(120, 100, "Easy");
-		TextOut(320, 100, "Normal");
-		TextOut(520, 100, "Hard");
+		TextOut(120, 100, "Easy");      // 쉬움
+		TextOut(320, 100, "Normal");    // 보통
+		TextOut(520, 100, "Hard");      // 어려움
 		for (int i = 0; i < 10; i++) {
 			for (int j = 0; j < 3; j++) {
-				TextOut(120 + (200 * j), 150 + (28 * i), "empty");
+				TextOut(120 + (200 * j), 150 + (28 * i), "empty");    // 모두 empty로 출력
 			}
-			TextOut(30, 150 + (28 * i), "%2d.", i + 1);
+			TextOut(30, 150 + (28 * i), "%2d.", i + 1);    // 랭킹 순서 출력 -> 1 ~ 10
 		}
 
+		// data의 내용 파일에 쓰기, 쓰기 실패시 닫고 종료
 		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // 초기화 후 파일 작성
 			fclose(fp);    // 파일 닫기
-			return;
+			return;    // 종료
 		}
 
 		fclose(fp);    // 파일 닫기
@@ -405,13 +406,14 @@ int main()
 
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 10; j++) {
-				temp.rank[i][j] = ULLONG_MAX;    // 가장 큰 값으로 초기화
+				temp.rank[i][j] = ULLONG_MAX;    // 자료형의 최대값으로 초기화
 			}
 		}
 
+		// data의 내용 파일에 쓰기, 쓰기 실패시 닫고 종료
 		if (fwrite(&temp, sizeof(Rank), 1, fp) < 1) {    // 초기화 후 파일 작성
 			fclose(fp);    // 파일 닫기
-			return 0;
+			return 0;    // 종료
 		}
 
 		fclose(fp);    // 파일 닫기
@@ -587,15 +589,15 @@ void checkClear(pGameData ap_data)
 // 게임 클리어 시간 랭킹 작성
 void writeRank(pGameData ap_data)
 {
-	Rank data;
-	FILE *fp;
+	Rank data;    // 랭킹 저장할 구조체 변수 선언
+	FILE *fp;    // 
 
 	// data로 파일 읽기
 	fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 읽기 용도로 열기
 
 	if (fread(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
 		fclose(fp);    // 파일 닫기
-		return;
+		return;    // 종료
 	}
 
 	fclose(fp);    // 파일 닫기
@@ -609,7 +611,7 @@ void writeRank(pGameData ap_data)
 
 		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
 			fclose(fp);    // 파일 닫기
-			return;
+			return;    // 파일 포인터 생성
 		}
 
 		fclose(fp);    // 파일 닫기
