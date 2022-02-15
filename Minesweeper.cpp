@@ -110,13 +110,14 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 	}
 }
 
-// 난이도 선택, 재시작 버튼 관리
+// 게임 버튼 관리
 void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 {
 	pGameData p_data = (pGameData)GetAppData();
 
+	switch (a_ctrl_id) {
 	// 다시 시작 버튼
-	if (a_ctrl_id == RESTART) {
+	case RESTART:
 		p_data->game_step = PLAYGAME;    // 게임 스텝 게임중으로 변경
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
 		p_data->isClicked = false;    // 첫 클릭 안한것으로 수정
@@ -126,9 +127,9 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->start_time = GetTickCount64();    // 시작 시간 재설정
 		p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
 		drawBoard(p_data);    // 판 그리기
-	}
+		break;
 	// 타이틀 버튼
-	else if (a_ctrl_id == TITLE) {
+	case TITLE:
 		Clear();    // 화면 초기화
 		TextOut(10, 10, BLACK, "Minesweeper");    // 제목
 
@@ -147,9 +148,9 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
 		memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
 		ShowDisplay();
-	}
+		break;
 	// 난이도 버튼
-	else if (a_ctrl_id >= EASY && a_ctrl_id <= HARD) {
+	case EASY: case NORMAL: case HARD:
 		if (p_data->game_step == SELECTLV) {
 			p_data->level = a_ctrl_id;    // 선택한 난이도 저장
 			randMine(p_data);    // 지뢰 랜덤으로 생성
@@ -171,20 +172,20 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
 			drawBoard(p_data);    // 판 그리기
 		}
-	}
+		break;
 	// 룰 버튼
-	else if (a_ctrl_id == RULE) {
+	case RULE:
 		MessageBox(gh_main_wnd, "        **지뢰가 없는 칸을 모두 클릭하면 클리어 됩니다.**\n\n \
 1. 마우스 왼쪽을 누르면 닫혀있는 칸이 열립니다.\n \
 2. 마우스 오른쪽 버튼을 누르면 깃발, 물음표, 닫힌 타일 순으로     토글됩니다.\n \
 3. 마우스 휠 클릭 or 왼쪽 더블클릭시 주변 8칸의 깃발을 올바      르게찾았다면 주변 8칸이 열립니다. 잘못 찾았을 시 바로 게임     오버가 됩니다.\n \
 4. 숫자가 적힌 타일은 주변 지뢰의 개수를 나타냅니다.", "규칙", MB_ICONINFORMATION | MB_OK);
-	}
+		break;
 	// 랭킹 버튼
-	else if (a_ctrl_id == RANK) {
+	case RANK:
 		switch (p_data->rankB_toggle) {
 		case 0:
-		{
+		{    // 중괄호로 감싸줘야 파일을 사용할 수 있읍
 			Clear();
 			// 난이도 선택 버튼 숨기기
 			ShowControl(p_data->button_adress.p_select_ctrl[0], SW_HIDE);
@@ -194,13 +195,13 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			ShowControl(p_data->button_adress.p_game_rule, SW_HIDE);
 			// 랭킹 초기화 버튼 보이기
 			ShowControl(p_data->button_adress.p_clear_rank, SW_SHOW);
-			
+
 			Rank data;
 			FILE *fp = NULL;    // 파일 포인터 생성
 			fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 바이너리 읽기 모드로 열기
 
 			fread(&data, sizeof(Rank), 1, fp);
-			
+
 			TextOut(120, 100, "Easy");
 			TextOut(320, 100, "Normal");
 			TextOut(520, 100, "Hard");
@@ -219,7 +220,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 
 			fclose(fp);
 			break;
-		}
+		}    // 중괄호로 감싸줘야 파일을 사용할 수 있읍
 		default:
 			Clear();
 			TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
@@ -234,11 +235,11 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			break;
 		}
 
-		p_data->rankB_toggle = !p_data->rankB_toggle;
+		p_data->rankB_toggle = !p_data->rankB_toggle;    // 랭킹버튼 토글
 		ShowDisplay();
-	}
-	// 랭킹 초기화 버튼
-	else if (a_ctrl_id == CLEARRANK) {
+		break;
+	// 랭킹 초기화
+	case CLEARRANK:
 		Clear();    // 화면 초기화
 
 		Rank data;
@@ -265,6 +266,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 
 		fclose(fp);    // 파일 닫기
 		ShowDisplay();    // 화면에 출력
+		break;
 	}
 }
 
