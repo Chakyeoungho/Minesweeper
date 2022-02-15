@@ -197,10 +197,14 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			Rank data;    // 랭킹 저장할 구조체 변수 선언
 			FILE *fp = NULL;    // 파일 포인터 생성
 			fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 바이너리 읽기 모드로 열기
+			if (fp == NULL) {    // 파일 열기에 실패하면
+				MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+				return;    // 종료
+			}
 
 			// data에 파일 읽기, 읽기 실패시 닫고 종료
 			if (fread(&data, sizeof(Rank), 1, fp) < 1) {
-				MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);
+				MessageBox(gh_main_wnd, "파일 읽기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
 				fclose(fp);    // 파일 닫기
 				return;    // 종료
 			}
@@ -249,6 +253,10 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		Rank data;    // 랭킹 저장할 구조체 변수 선언
 		FILE *fp = NULL;    // 파일 포인터 생성
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 모드로 열기
+		if (fp == NULL) {    // 파일 열기에 실패하면
+			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+			return;    // 종료
+		}
 
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 10; j++) {
@@ -268,7 +276,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 
 		// data의 내용 파일에 쓰기, 쓰기 실패시 닫고 종료
 		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // 초기화 후 파일 작성
-			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);
+			MessageBox(gh_main_wnd, "파일 쓰기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
 			fclose(fp);    // 파일 닫기
 			return;    // 종료
 		}
@@ -397,14 +405,18 @@ int main()
 					  0, SELECTLV, 0, 0, false };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 	
-	FILE *fp = NULL;    // 파일 포인터 생성
 	Rank temp;    // 임시 변수
-	struct stat buffer;
+	FILE *fp = NULL;    // 파일 포인터 생성
+	struct stat buffer;    // stat를 사용하기 위한 구조체
 
-	if (stat("MinesweeperRank.bin", &buffer) == -1) {
+	if (stat("MinesweeperRank.bin", &buffer) == -1) {    // 파일이 없으면
 		// 랭킹 파일이 없으면 파일을 만들고 모두 UINT64의 최대값으로 초기화
 		// 파일이 있으면 0을 반환
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 형식으로 열기
+		if (fp == NULL) {    // 파일 열기에 실패하면
+			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+			return 0;    // 종료
+		}
 
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 10; j++) {
@@ -413,8 +425,8 @@ int main()
 		}
 
 		// data의 내용 파일에 쓰기, 쓰기 실패시 닫고 종료
-		if (fwrite(&temp, sizeof(Rank), 1, fp) < 1) {    // 초기화 후 파일 작성
-			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);
+		if (fwrite(&temp, sizeof(Rank), 1, fp) < 1) {
+			MessageBox(gh_main_wnd, "파일 쓰기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
 			fclose(fp);    // 파일 닫기
 			return 0;    // 종료
 		}
@@ -593,13 +605,17 @@ void checkClear(pGameData ap_data)
 void writeRank(pGameData ap_data)
 {
 	Rank data;    // 랭킹 저장할 구조체 변수 선언
-	FILE *fp;    // 
+	FILE *fp;    // 파일 포인터 생성
 
 	// data로 파일 읽기
 	fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 읽기 용도로 열기
+	if (fp == NULL) {    // 파일 열기에 실패하면
+		MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+		return;    // 종료
+	}
 
 	if (fread(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
-		MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);
+		MessageBox(gh_main_wnd, "파일 읽기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
 		fclose(fp);    // 파일 닫기
 		return;    // 종료
 	}
@@ -609,12 +625,16 @@ void writeRank(pGameData ap_data)
 	// 랭킹 업데이트
 	if (ap_data->curr_time < data.rank[ap_data->level - 1000][9]) {    // 랭킹 10위 이내에 들면
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
+		if (fp == NULL) {    // 파일 열기에 실패하면
+			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+			return;    // 종료
+		}
 
 		data.rank[ap_data->level - 1000][9] = ap_data->curr_time;
 		rank_bubble_sort(data.rank[ap_data->level - 1000], 10);
 
 		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
-			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);
+			MessageBox(gh_main_wnd, "파일 쓰기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
 			fclose(fp);    // 파일 닫기
 			return;    // 파일 포인터 생성
 		}
