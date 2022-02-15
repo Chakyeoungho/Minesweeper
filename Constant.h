@@ -81,7 +81,7 @@ enum boardState {
 #define GRAY   RGB(100, 100, 100)    // 회색
 #define WHITE  RGB(255, 255, 255)    // 흰색
 
-// 현재 개임 스텝
+// 현재 개임 단계
 #define SELECTLV 0    // 난이도 선택 화면
 #define PLAYGAME 1    // 게임중 화면
 #define CLEARGME 2    // 게임 클리어

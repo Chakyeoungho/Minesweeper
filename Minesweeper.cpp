@@ -200,7 +200,10 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			FILE *fp = NULL;    // 파일 포인터 생성
 			fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 바이너리 읽기 모드로 열기
 
-			fread(&data, sizeof(Rank), 1, fp);
+			if (fread(&data, sizeof(Rank), 1, fp) < 1) {
+				fclose(fp);
+				return;
+			}
 
 			TextOut(120, 100, "Easy");
 			TextOut(320, 100, "Normal");
@@ -262,9 +265,13 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			TextOut(30, 150 + (28 * i), "%2d.", i + 1);
 		}
 
-		fwrite(&data, sizeof(Rank), 1, fp);    // 초기화 후 파일 작성
+		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // 초기화 후 파일 작성
+			fclose(fp);    // 파일 닫기
+			return;
+		}
 
 		fclose(fp);    // 파일 닫기
+
 		ShowDisplay();    // 화면에 출력
 		break;
 	}
@@ -402,7 +409,10 @@ int main()
 			}
 		}
 
-		fwrite(&temp, sizeof(Rank), 1, fp);    // 초기화 후 파일 작성
+		if (fwrite(&temp, sizeof(Rank), 1, fp) < 1) {    // 초기화 후 파일 작성
+			fclose(fp);    // 파일 닫기
+			return 0;
+		}
 
 		fclose(fp);    // 파일 닫기
 	}
@@ -583,7 +593,10 @@ void writeRank(pGameData ap_data)
 	// data로 파일 읽기
 	fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 읽기 용도로 열기
 
-	fread(&data, sizeof(Rank), 1, fp);    // rank 구조체로 파일 읽기
+	if (fread(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
+		fclose(fp);    // 파일 닫기
+		return;
+	}
 
 	fclose(fp);    // 파일 닫기
 
@@ -594,7 +607,10 @@ void writeRank(pGameData ap_data)
 		data.rank[ap_data->level - 1000][9] = ap_data->curr_time;
 		rank_bubble_sort(data.rank[ap_data->level - 1000], 10);
 
-		fwrite(&data, sizeof(Rank), 1, fp);    // rank 구조체로 파일 읽기
+		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
+			fclose(fp);    // 파일 닫기
+			return;
+		}
 
 		fclose(fp);    // 파일 닫기
 	}
