@@ -49,10 +49,10 @@ void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
 void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
 void checkClear(pGameData ap_data);    // 클리어 확인
 void writeRank(pGameData ap_data);    // 랭킹 작성
-void bubble_sort(UINT64 data[], int count);    // 랭킹 정렬
+void rank_bubble_sort(UINT64 data[], int count);    // 랭킹 정렬
 void openNothingClosed(pGameData ap_data, int x_pos, int y_pos);    // 연쇄적으로 판 오픈
 void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
-void checkAndOpen8Board(pGameData ap_data, int x, int y);    // 올바르게 깃발을 놓고 휠을 누르면 근처 8개의판이 열림
+void checkAndOpen8Board(pGameData ap_data, int x, int y);    // 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭을 하면 근처 8개의판이 열림
 
 // 타이머가 0.1초마다 호출할 함수
 TIMER StopWatchProc(NOT_USE_TIMER_DATA)
@@ -590,7 +590,7 @@ void writeRank(pGameData ap_data)
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
 
 		data.rank[ap_data->level - 1000][9] = ap_data->curr_time;
-		bubble_sort(data.rank[ap_data->level - 1000], 10);
+		rank_bubble_sort(data.rank[ap_data->level - 1000], 10);
 
 		fwrite(&data, sizeof(Rank), 1, fp);    // rank 구조체로 파일 읽기
 
@@ -599,7 +599,7 @@ void writeRank(pGameData ap_data)
 }
 
 // 랭킹 정렬
-void bubble_sort(UINT64 arr[], int count)
+void rank_bubble_sort(UINT64 arr[], int count)
 {
 	UINT64 temp;
 
@@ -656,7 +656,7 @@ void flagQuesBoard(pGameData ap_data, int x, int y)
 	}
 }
 
-// 올바르게 깃발을 놓고 휠을 누르면 근처 8개의판이 열림
+// 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭을 하면 근처 8개의판이 열림
 void checkAndOpen8Board(pGameData ap_data, int x, int y)
 {
 	int rightFlagNum = 0;    // 주변 8칸의 올바르게 놓은 깃발의 개수
