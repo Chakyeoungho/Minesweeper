@@ -200,6 +200,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 
 			// data에 파일 읽기, 읽기 실패시 닫고 종료
 			if (fread(&data, sizeof(Rank), 1, fp) < 1) {
+				MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);
 				fclose(fp);    // 파일 닫기
 				return;    // 종료
 			}
@@ -267,6 +268,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 
 		// data의 내용 파일에 쓰기, 쓰기 실패시 닫고 종료
 		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // 초기화 후 파일 작성
+			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);
 			fclose(fp);    // 파일 닫기
 			return;    // 종료
 		}
@@ -412,6 +414,7 @@ int main()
 
 		// data의 내용 파일에 쓰기, 쓰기 실패시 닫고 종료
 		if (fwrite(&temp, sizeof(Rank), 1, fp) < 1) {    // 초기화 후 파일 작성
+			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);
 			fclose(fp);    // 파일 닫기
 			return 0;    // 종료
 		}
@@ -596,6 +599,7 @@ void writeRank(pGameData ap_data)
 	fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 읽기 용도로 열기
 
 	if (fread(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
+		MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);
 		fclose(fp);    // 파일 닫기
 		return;    // 종료
 	}
@@ -610,6 +614,7 @@ void writeRank(pGameData ap_data)
 		rank_bubble_sort(data.rank[ap_data->level - 1000], 10);
 
 		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
+			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);
 			fclose(fp);    // 파일 닫기
 			return;    // 파일 포인터 생성
 		}
