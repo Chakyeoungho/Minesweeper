@@ -34,6 +34,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	BYTE game_step;       // 현재 게임 단계
 	BYTE rankB_toggle;    // 랭킹 버튼 토글용 변수
 	WORD level;           // 선택한 난이도
+	bool isClicked;       // 게임 시작후 유효한 첫 클릭을 했는지 체크할 변수
 	UINT64 start_time;    // 시작 시간
 	UINT64 curr_time;     // 현재 시간
 	POINT temp_pos;       // 임시 커서 좌표
@@ -58,7 +59,7 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 {
 	pGameData ap_data = (pGameData)GetAppData();
 
-	if (ap_data->game_step == PLAYGAME) {    // 게임중일 때만
+	if (ap_data->game_step == PLAYGAME && ap_data->isClicked) {    // 게임 중, 첫 클릭을 했을 때만
 		ap_data->curr_time = GetTickCount64() - ap_data->start_time;    // 현재 시간 구하기
 		Rectangle(5, 495, 50, 533, WHITE, WHITE);    // 숫자 지우는 용도
 		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
@@ -91,11 +92,17 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 	pGameData p_data = (pGameData)GetAppData();
 
 	if (p_data->game_step == PLAYGAME) {
-		resetClickState(p_data);    // 클릭 초기화
+		resetClickState(p_data);     // 클릭 초기화
 
 		// 좌클릭으로 판 열기
 		if (a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
 			a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
+			// 첫 클릭 때 시간 초기화
+			if (p_data->isClicked == false) {
+				p_data->start_time = GetTickCount64();    // 시작 시간 재설정
+				p_data->isClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
+			}
+
 			clickBoard(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);
 			checkClear(p_data);    // 클리어 했는지 확인
 		}
@@ -112,11 +119,13 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 	if (a_ctrl_id == RESTART) {
 		p_data->game_step = PLAYGAME;    // 게임 스텝 게임중으로 변경
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
+		p_data->isClicked = false;    // 첫 클릭 안한것으로 수정
 		memset(p_data, 0, sizeof(char) * 16 * 30 * 3);    // 게임정보 초기화
+
 		randMine(p_data);    // 지뢰 랜덤으로 생성
-		drawBoard(p_data);    // 판 그리기
 		p_data->start_time = GetTickCount64();    // 시작 시간 재설정
 		p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
+		drawBoard(p_data);    // 판 그리기
 	}
 	// 타이틀 버튼
 	else if (a_ctrl_id == TITLE) {
@@ -144,7 +153,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		if (p_data->game_step == SELECTLV) {
 			p_data->level = a_ctrl_id;    // 선택한 난이도 저장
 			randMine(p_data);    // 지뢰 랜덤으로 생성
-			drawBoard(p_data);    // 판 그리기
+			p_data->isClicked = false;    // 첫 클릭 안한것으로 수정
 			p_data->game_step = PLAYGAME;    // 다음단계로 이동
 
 			// 난이도 선택 버튼 숨기기
@@ -159,6 +168,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			ShowControl(p_data->button_adress.p_game_ctrl[1], SW_SHOW);
 
 			p_data->start_time = GetTickCount64();    // 시간 초기화
+			p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
+			drawBoard(p_data);    // 판 그리기
 		}
 	}
 	// 룰 버튼
@@ -319,10 +330,16 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	// 마우스 오른쪽 버튼을 땐 경우에 처리
 	if (a_message_id == WM_RBUTTONUP) {
 		if (p_data->game_step == PLAYGAME) {
-			resetClickState(p_data);    // 클릭 초기화
+			resetClickState(p_data);     // 클릭 초기화
 
-			if (x_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
+			if (x_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] && 
 				y_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
+				// 첫 클릭 때 시간 초기화
+				if (p_data->isClicked == false) {
+					p_data->start_time = GetTickCount64();    // 시작 시간 재설정
+					p_data->isClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
+				}
+
 				flagQuesBoard(p_data, x_pos / p_data->gridSize[p_data->level - 1000], y_pos / p_data->gridSize[p_data->level - 1000]);    // 깃발, 물음표
 			}
 			drawBoard(p_data);    // 판 그리기
@@ -365,7 +382,7 @@ int main()
 					  { EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT   },    // x축 타일의 개수
 					  { EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT   },    // y축 타일의 개수
 					  { EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM  },    // 지뢰의 개수
-					  0, SELECTLV, 0, 0 };
+					  0, SELECTLV, 0, 0, false };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 	
 	FILE *fp = NULL;    // 파일 포인터 생성
@@ -559,7 +576,7 @@ void checkClear(pGameData ap_data)
 void writeRank(pGameData ap_data)
 {
 	Rank data;
-	FILE *fp = NULL;
+	FILE *fp;
 
 	// data로 파일 읽기
 	fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 읽기 용도로 열기
