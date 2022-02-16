@@ -1,11 +1,10 @@
 ﻿#include "pch.h"
 #include <stdio.h>       // 파일 입출력, 로컬 랭킹 기록용
+#include <sys/stat.h>    // 파일이 있는지 확인하기 위한 stat가 들어있는 헤더파일
 #include "tipsware.h"
 #include "Constant.h"    // 필요한 상수를 모아놓은 헤더파일
 #include <Windowsx.h>    // lParam의 값을 x, y좌표로 바꾸기 위한 매크로가 들어있는 헤더파일
 #include <time.h>        // 난수의 시드값을 설정하기 위한 헤더파일
-#include <sys/stat.h>    // 파일이 있는지 확인하기 위한 stat가 들어있는 헤더파일
-#include <math.h>
 
 #pragma pack(push, 1)
 typedef struct _Rank
