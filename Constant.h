@@ -88,6 +88,6 @@ enum boardState {
 #define GAMEOVER 3    // 게임 오버
 
 // 마우스 클릭 상태
-#define CLICKED 100    // 마우스 왼쪽 클릭
+#define CLICKED 100    // 마우스 클릭
 
 #endif // !__CONSTANT_H__

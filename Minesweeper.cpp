@@ -1,10 +1,11 @@
 ﻿#include "pch.h"
 #include <stdio.h>       // 파일 입출력, 로컬 랭킹 기록용
-#include <sys/stat.h>    // 파일이 있는지 확인하기 위한 stat가 들어있는 헤더파일
 #include "tipsware.h"
 #include "Constant.h"    // 필요한 상수를 모아놓은 헤더파일
 #include <Windowsx.h>    // lParam의 값을 x, y좌표로 바꾸기 위한 매크로가 들어있는 헤더파일
 #include <time.h>        // 난수의 시드값을 설정하기 위한 헤더파일
+#include <sys/stat.h>    // 파일이 있는지 확인하기 위한 stat가 들어있는 헤더파일
+#include <math.h>
 
 #pragma pack(push, 1)
 typedef struct _Rank
@@ -54,7 +55,7 @@ void openNothingClosed(pGameData ap_data, int x_pos, int y_pos);    // 연쇄적
 void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
 void checkAndOpen8Board(pGameData ap_data, int x, int y);    // 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭을 하면 근처 8개의판이 열림
 
-// 타이머가 0.1초마다 호출할 함수
+// 타이머가 0.1초(100ms)마다 호출할 함수
 TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 {
 	pGameData ap_data = (pGameData)GetAppData();
@@ -74,14 +75,41 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 	p_data->temp_pos = a_pos;    // 눌렀을 때 좌표를 저장
 
 	if (p_data->game_step == PLAYGAME) {
-		resetClickState(p_data);    // 클릭 초기화
+		// 마우스 왼쪽 버튼과 컨트롤 키를 동시에 눌렀을 경우
+		if (a_mixed_key & MK_CONTROL) {
+			resetClickState(p_data);    // 클릭 초기화
 
-		if (a_pos.x > 0 && a_pos.y > 0 &&
-			a_pos.x < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
-			a_pos.y < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] &&    // 마우스 좌표 볌위 확인
-			p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] <= mine) {
-			p_data->click_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] = CLICKED;    // 클릭
-			drawBoard(p_data);    // 판 그리기
+			if (a_pos.x > 0 && a_pos.y > 0 &&
+				a_pos.x < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
+				a_pos.y < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
+				// 눌렀을 때 좌표를 저장
+				p_data->temp_pos = a_pos;
+
+				// 휠을 클릭 했을 때 주변 8칸을 클릭
+				for (int i = a_pos.y / p_data->gridSize[p_data->level - 1000] - 1; i <= a_pos.y / p_data->gridSize[p_data->level - 1000] + 1; i++) {
+					for (int j = a_pos.x / p_data->gridSize[p_data->level - 1000] - 1; j <= a_pos.x / p_data->gridSize[p_data->level - 1000] + 1; j++) {
+						if (i < 0 || j < 0 || i >= p_data->y_count[p_data->level - 1000] || j >= p_data->x_count[p_data->level - 1000] ||
+							(i == a_pos.y / p_data->gridSize[p_data->level - 1000] && j == a_pos.x / p_data->gridSize[p_data->level - 1000]) ||
+							(p_data->board_state[i][j] >= nothing_open && p_data->board_state[i][j] <= mine_num8_open))
+							continue;    // 열린 것들이나 범위를 벗어나면 건너뛰기
+
+						p_data->click_state[i][j] = CLICKED;    // 클릭
+					}
+				}
+				drawBoard(p_data);    // 판 그리기
+			}
+
+			return;
+		} else {    // 마우스 왼쪽 버튼만 눌렀을 경우
+			resetClickState(p_data);    // 클릭 초기화ㄴ
+
+			if (a_pos.x > 0 && a_pos.y > 0 &&
+				a_pos.x < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
+				a_pos.y < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] &&    // 마우스 좌표 볌위 확인
+				p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] <= mine) {
+				p_data->click_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] = CLICKED;    // 클릭
+				drawBoard(p_data);    // 판 그리기
+			}
 		}
 	}
 }
@@ -92,21 +120,35 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 	pGameData p_data = (pGameData)GetAppData();
 
 	if (p_data->game_step == PLAYGAME) {
-		resetClickState(p_data);     // 클릭 초기화
+		// 마우스 왼쪽 버튼과 컨트롤 키를 동시에 눌렀을 경우
+		if (a_mixed_key & MK_CONTROL) {
+			resetClickState(p_data);    // 클릭 초기화
 
-		// 좌클릭으로 판 열기
-		if (a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
-			a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
-			// 첫 클릭 시 시간 초기화
-			if (p_data->isClicked == false) {
-				p_data->start_time = GetTickCount64();    // 시작 시간 재설정
-				p_data->isClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
+			if (p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] >= nothing_open &&
+				p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] <= mine_num8_open) {
+				checkAndOpen8Board(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);
+				checkClear(p_data);    // 게임 클리어 확인
 			}
+			drawBoard(p_data);    // 판 그리기
 
-			clickBoard(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);    // 판 클릭
-			checkClear(p_data);    // 클리어 했는지 확인
+			return;
+		} else {    // 마우스 왼쪽 버튼만 눌렀을 경우
+			resetClickState(p_data);     // 클릭 초기화
+
+			// 좌클릭으로 판 열기, 좌클릭을 눌렀을 때 타일과 땠을 때 타일이 같은지 확인
+			if (a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
+				a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
+				// 첫 클릭 시 시간 초기화
+				if (p_data->isClicked == false) {
+					p_data->start_time = GetTickCount64();    // 시작 시간 재설정
+					p_data->isClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
+				}
+
+				clickBoard(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);    // 판 클릭
+				checkClear(p_data);    // 클리어 했는지 확인
+			}
+			drawBoard(p_data);    // 판 그리기
 		}
-		drawBoard(p_data);    // 판 그리기
 	}
 }
 
@@ -176,7 +218,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		MessageBox(gh_main_wnd, "        **지뢰가 없는 칸을 모두 클릭하면 클리어 됩니다.**\n\n \
 1. 마우스 왼쪽을 누르면 닫혀있는 칸이 열립니다.\n \
 2. 마우스 오른쪽 버튼을 누르면 깃발, 물음표, 닫힌 타일 순으로     토글됩니다.\n \
-3. 주변 지뢰의 개수만큼 깃발을 놓고 마우스 휠 클릭 or 왼쪽        더블클릭시 주변 8칸이 열립니다.\n \
+3. 주변 지뢰의 개수만큼 깃발을 놓고 마우스 휠 클릭 or 왼쪽         더블클릭 or 마우스 왼쪽 버튼과 컨트롤 키를 클릭시 주변 8       칸이 열립니다.\n \
 4. 숫자가 적힌 타일은 주변 지뢰의 개수를 나타냅니다.", "규칙", MB_ICONINFORMATION | MB_OK);
 		break;
 	// 랭킹 버튼
