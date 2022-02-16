@@ -52,7 +52,7 @@ void writeRank(pGameData ap_data);    // 랭킹 작성
 void rank_bubble_sort(UINT64 data[], int count);    // 랭킹 정렬
 void openNothingClosed(pGameData ap_data, int x_pos, int y_pos);    // 연쇄적으로 판 오픈
 void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
-void checkAndOpen8Board(pGameData ap_data, int x, int y);    // 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭을 하면 근처 8개의판이 열림
+void checkAndOpen8Board(pGameData ap_data, int x, int y);    // 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
 
 // 타이머가 0.1초(100ms)마다 호출할 함수
 TIMER StopWatchProc(NOT_USE_TIMER_DATA)
@@ -81,8 +81,6 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 			if (a_pos.x > 0 && a_pos.y > 0 &&
 				a_pos.x < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
 				a_pos.y < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
-				// 눌렀을 때 좌표를 저장
-				p_data->temp_pos = a_pos;
 
 				// 휠을 클릭 했을 때 주변 8칸을 클릭
 				for (int i = a_pos.y / p_data->gridSize[p_data->level - 1000] - 1; i <= a_pos.y / p_data->gridSize[p_data->level - 1000] + 1; i++) {
@@ -100,7 +98,7 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 
 			return;
 		} else {    // 마우스 왼쪽 버튼만 눌렀을 경우
-			resetClickState(p_data);    // 클릭 초기화ㄴ
+			resetClickState(p_data);    // 클릭 초기화
 
 			if (a_pos.x > 0 && a_pos.y > 0 &&
 				a_pos.x < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
@@ -124,8 +122,14 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 		if (a_mixed_key & MK_CONTROL) {
 			resetClickState(p_data);    // 클릭 초기화
 
-			if (p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] >= nothing_open &&
+			if (a_pos.x > 0 && a_pos.y > 0 &&
+				a_pos.x < p_data->x_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] &&
+				a_pos.y < p_data->y_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] &&    // 범위 확인
+				a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
+				a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000] &&  
+				p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] >= nothing_open &&
 				p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] <= mine_num8_open) {
+				// 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
 				checkAndOpen8Board(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);
 				checkClear(p_data);    // 게임 클리어 확인
 			}
@@ -136,7 +140,10 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 			resetClickState(p_data);     // 클릭 초기화
 
 			// 좌클릭으로 판 열기, 좌클릭을 눌렀을 때 타일과 땠을 때 타일이 같은지 확인
-			if (a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
+			if (a_pos.x > 0 && a_pos.y > 0 && 
+				a_pos.x < p_data->x_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] && 
+				a_pos.y < p_data->y_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] &&    // 범위 확인
+				a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
 				a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
 				// 첫 클릭 시 시간 초기화
 				if (p_data->isClicked == false) {
@@ -225,7 +232,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 	case RANK:
 		switch (p_data->rankB_toggle) {
 		case 0:
-		{    // 중괄호로 감싸줘야 파일을 사용할 수 있읍
+		{    // 중괄호로 감싸줘야 파일을 사용할 수 있음
 			Clear();
 			// 난이도 선택 버튼 숨기기
 			ShowControl(p_data->button_adress.p_select_ctrl[0], SW_HIDE);
@@ -270,7 +277,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 
 			fclose(fp);    // 파일 닫기
 			break;
-		}    // 중괄호로 감싸줘야 파일을 사용할 수 있읍
+		}    // 중괄호로 감싸줘야 파일을 사용할 수 있음
 		default:
 			Clear();
 			TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
@@ -417,6 +424,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 
 			if (p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] >= nothing_open &&
 				p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] <= mine_num8_open) {
+				// 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
 				checkAndOpen8Board(p_data, x_pos / p_data->gridSize[p_data->level - 1000], y_pos / p_data->gridSize[p_data->level - 1000]);
 				checkClear(p_data);    // 게임 클리어 확인
 			}
