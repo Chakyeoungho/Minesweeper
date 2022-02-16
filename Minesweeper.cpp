@@ -35,6 +35,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	BYTE rankB_toggle;    // 랭킹 버튼 토글용 변수
 	WORD level;           // 선택한 난이도
 	bool isClicked;       // 게임 시작후 유효한 첫 클릭을 했는지 체크할 변수
+	bool isMLBClicked;    // 게임 시작후 마우스 왼쪽 버튼을 클릭 했는지 체크하는 변수
 	UINT64 start_time;    // 시작 시간
 	UINT64 curr_time;     // 현재 시간
 	POINT temp_pos;       // 임시 커서 좌표
@@ -45,7 +46,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 void CreateSelectLVButton();    // 난이도 선택 버튼 생성
 void resetClickState(pGameData ap_data);    // 클릭 상태 초기화
 void drawBoard(pGameData ap_data);    // 보드판 그리기
-void randMine(pGameData ap_data);     // 랜덤으로 지뢰 생성
+void randMine(pGameData ap_data, int x, int y);     // 랜덤으로 지뢰 생성
 void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
 void checkClear(pGameData ap_data);    // 클리어 확인
 void writeRank(pGameData ap_data);    // 랭킹 작성
@@ -146,9 +147,11 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 				a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
 				a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
 				// 첫 클릭 시 시간 초기화
-				if (p_data->isClicked == false) {
+				if (p_data->isMLBClicked == false) {
+					randMine(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);    // 지뢰 랜덤으로 생성
 					p_data->start_time = GetTickCount64();    // 시작 시간 재설정
 					p_data->isClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
+					p_data->isMLBClicked = true;    // 처음 좌클릭 때 클릭된 타일을 제외하고 지뢰를 생성하기 위한 변수
 				}
 
 				clickBoard(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);    // 판 클릭
@@ -170,9 +173,9 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->game_step = PLAYGAME;    // 게임 스텝 게임중으로 변경
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
 		p_data->isClicked = false;    // 첫 클릭 안한것으로 수정
+		p_data->isMLBClicked = false;    // 첫 좌클릭 안한것으로 수정
 		memset(p_data, 0, sizeof(char) * 16 * 30 * 3);    // 게임정보 초기화
 
-		randMine(p_data);    // 지뢰 랜덤으로 생성
 		p_data->start_time = GetTickCount64();    // 시작 시간 재설정
 		p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
 		drawBoard(p_data);    // 판 그리기
@@ -196,13 +199,13 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
 		p_data->isClicked = false;    // 첫 클릭 안한것으로 수정
+		p_data->isMLBClicked = false;    // 첫 좌클릭 안한것으로 수정
 		p_data->game_step = SELECTLV;    // 난이도 선택단계로 수정
 		ShowDisplay();
 		break;
 	// 난이도 버튼
 	case EASY: case NORMAL: case HARD:
 		p_data->level = a_ctrl_id;    // 선택한 난이도 저장
-		randMine(p_data);    // 지뢰 랜덤으로 생성
 		p_data->game_step = PLAYGAME;    // 다음단계로 이동
 
 		// 난이도 선택 버튼 숨기기
@@ -452,7 +455,7 @@ int main()
 					  { EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT   },    // x축 타일의 개수
 					  { EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT   },    // y축 타일의 개수
 					  { EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM  },    // 지뢰의 개수
-					  0, SELECTLV, 0, 0, false };
+					  0, SELECTLV, 0, 0, false, false };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 	
 	Rank temp;    // 임시 변수
@@ -594,24 +597,35 @@ void drawBoard(pGameData ap_data)
 }
 
 // 랜덤으로 지뢰 생성
-void randMine(pGameData ap_data)
+void randMine(pGameData ap_data, int x, int y)
 {
 	srand((unsigned int)time(NULL));    // 현재 시간을 시드값으로 설정
 	int tempX, tempY;    // 난수를 저장할 임시 변수
 	int tempMineNum = 0;    // 현재 생성된 지뢰 개수
 
 	while (tempMineNum != ap_data->mineNum[ap_data->level - 1000]) {    // 난이도에 따른 지뢰 개수만큼
-		if (ap_data->board_state[tempY = (rand() % ap_data->y_count[ap_data->level - 1000])][tempX = (rand() % ap_data->x_count[ap_data->level - 1000])] != mine) {
-			ap_data->board_state[tempY][tempX] = mine;    // 지뢰가 없으면 지뢰 생성
-			tempMineNum++;
+		if (ap_data->board_state[tempY = (rand() % ap_data->y_count[ap_data->level - 1000])][tempX = (rand() % ap_data->x_count[ap_data->level - 1000])] != mine && 
+			tempX != x && tempY != y) {    // 지뢰가 없으면 지뢰 생성
+			if (ap_data->board_state[tempY][tempX] == flag || ap_data->board_state[tempY][tempX] == questionMark) {    // 깃발이나 물음표가 있으면 임시 판에 지뢰 생성
+				ap_data->board_temp[tempY][tempX] = mine;
+				tempMineNum++;
+			} else {    // 아니면 그냥 생성
+				ap_data->board_state[tempY][tempX] = mine;
+				tempMineNum++;
+			}
 
 			// 지뢰가 생성되는 순간 주위 8곳에 1증가
 			for (int y = tempY - 1; y <= tempY + 1; y++) {
 				for (int x = tempX - 1; x <= tempX + 1; x++) {
 					if (y < 0 || x < 0 || x >= ap_data->x_count[ap_data->level - 1000] || y >= ap_data->y_count[ap_data->level - 1000] ||
-						ap_data->board_state[y][x] == mine)    // 범위, 지뢰 체크 
+						(ap_data->board_state[y][x] == mine || ap_data->board_temp[y][x] == mine))    // 범위, 지뢰 체크 
 						continue;
-					ap_data->board_state[y][x]++;
+
+					if (ap_data->board_state[y][x] == flag || ap_data->board_state[y][x] == questionMark) {    // 깃발이나 물음표가 있으면 임시 판에 지뢰 개수 증가
+						ap_data->board_temp[y][x]++;
+					} else {    // 아니면 그냥 지뢰 개수 증가
+						ap_data->board_state[y][x]++;
+					}
 				}
 			}
 		}
