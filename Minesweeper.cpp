@@ -119,6 +119,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 	pGameData p_data = (pGameData)GetAppData();
 
 	if (p_data->game_step == PLAYGAME) {
+
 		// 마우스 왼쪽 버튼과 컨트롤 키를 동시에 눌렀을 경우
 		if (a_mixed_key & MK_CONTROL) {
 			resetClickState(p_data);    // 클릭 초기화
