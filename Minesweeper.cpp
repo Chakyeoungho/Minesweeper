@@ -89,8 +89,7 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 				for (int i = y - 1; i <= y + 1; i++) {
 					for (int j = x - 1; j <= x + 1; j++) {
 						if (i < 0 || j < 0 || i >= p_data->y_count[p_data->level - 1000] || j >= p_data->x_count[p_data->level - 1000] ||
-							(i == y && j == x) ||
-							(p_data->board_state[i][j] >= nothing_open && p_data->board_state[i][j] <= mine_num8_open))
+							(i == y && j == x) || (p_data->board_state[i][j] >= nothing_open && p_data->board_state[i][j] <= mine_num8_open))
 							continue;    // 열린 것들이나 범위를 벗어나면 건너뛰기
 
 						p_data->click_state[i][j] = CLICKED;    // 클릭
@@ -106,7 +105,7 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 	}
 }
 
-	// 마우스 왼쪽 버튼을 땠을 때 호출될 함수
+// 마우스 왼쪽 버튼을 땠을 때 호출될 함수
 void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 {
 	pGameData p_data = (pGameData)GetAppData();
@@ -126,7 +125,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 					checkClear(p_data);    // 게임 클리어 확인
 				}
 			} else {    // 마우스 왼쪽 버튼만 눌렀을 경우
-				// 첫 클릭 시 시간 초기화
+			 // 첫 클릭 시 시간 초기화
 				if (p_data->isFirstMLBClicked == false) {
 					randMine(p_data, x, y);    // 지뢰 랜덤으로 생성
 					p_data->start_time = GetTickCount64();    // 시작 시간 재설정
@@ -138,6 +137,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 				checkClear(p_data);    // 클리어 했는지 확인
 			}
 		}
+
 		drawBoard(p_data);    // 판 그리기
 	}
 }
@@ -154,6 +154,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
 		p_data->isFirstClicked = false;    // 첫 클릭 안한것으로 수정
 		p_data->isFirstMLBClicked = false;    // 첫 좌클릭 안한것으로 수정
+		p_data->isMLBClicked = false;
+		p_data->isMRBClicked = false;
 		memset(p_data, 0, sizeof(char) * 16 * 30 * 3);    // 게임정보 초기화
 
 		p_data->start_time = GetTickCount64();    // 시작 시간 재설정
@@ -180,6 +182,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
 		p_data->isFirstClicked = false;    // 첫 클릭 안한것으로 수정
 		p_data->isFirstMLBClicked = false;    // 첫 좌클릭 안한것으로 수정
+		p_data->isMLBClicked = false;
+		p_data->isMRBClicked = false;
 		p_data->game_step = SELECTLV;    // 난이도 선택단계로 수정
 		ShowDisplay();
 		break;
@@ -201,6 +205,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 
 		p_data->start_time = GetTickCount64();    // 시간 초기화
 		p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
+		p_data->isMLBClicked = false;
+		p_data->isMRBClicked = false;
 		drawBoard(p_data);    // 판 그리기
 		break;
 		// 룰 버튼
@@ -330,7 +336,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	int y_pos = GET_Y_LPARAM(lParam);
 
 	// 마우스 오른쪽 버튼을 누른 경우에 처리
-	if (a_message_id == WM_RBUTTONDOWN) {
+	if (a_message_id == WM_RBUTTONDOWN || a_message_id == WM_RBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
 			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = y_pos / p_data->gridSize[p_data->level - 1000];    // 좌표
 			resetClickState(p_data);    // 클릭 초기화
@@ -346,8 +352,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 					for (int i = y - 1; i <= y + 1; i++) {
 						for (int j = x - 1; j <= x + 1; j++) {
 							if (i < 0 || j < 0 || i >= p_data->y_count[p_data->level - 1000] || j >= p_data->x_count[p_data->level - 1000] ||
-								(i == y && j == x) ||
-								(p_data->board_state[i][j] >= nothing_open && p_data->board_state[i][j] <= mine_num8_open))
+								(i == y && j == x) || (p_data->board_state[i][j] >= nothing_open && p_data->board_state[i][j] <= mine_num8_open))
 								continue;    // 열린 것들이나 범위를 벗어나면 건너뛰기
 
 							p_data->click_state[i][j] = CLICKED;    // 클릭
@@ -419,6 +424,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 					flagQuesBoard(p_data, x, y);    // 깃발, 물음표
 				}
 			}
+
 			drawBoard(p_data);    // 판 그리기
 		}
 
