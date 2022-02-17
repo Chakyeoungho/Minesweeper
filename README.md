@@ -1,7 +1,7 @@
 # Minesweeper
    
- Developer : ldhyun5139, Chakyeoungho
- Created 2022.
+Developer : ldhyun5139, Chakyeoungho   
+Created 2022.   
    
 좌클릭시 판 오픈   
 우클릭시 깃발, 물음표, 원래 상태순으로 토글   
