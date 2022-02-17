@@ -741,19 +741,19 @@ void rank_bubble_sort(UINT64 arr[], int count)
 }
 
 // 아무것도 없는 판을 연쇄적으로 열기
-void openNothingClosed(pGameData ap_data, int x_pos, int y_pos)
+void openNothingClosed(pGameData ap_data, int x, int y)
 {
 	// 좌클릭 좌표 기준 8칸
-	for (int y = y_pos - 1; y <= y_pos + 1; y++) {
-		for (int x = x_pos - 1; x <= x_pos + 1; x++) {
-			if (y < 0 || x < 0 || x >= ap_data->x_count[ap_data->level - 1000] || y >= ap_data->y_count[ap_data->level - 1000] || ap_data->board_state[y][x] > mine_num8_closed)
+	for (int i = y - 1; i <= y + 1; i++) {
+		for (int j = x - 1; j <= x + 1; j++) {
+			if (i < 0 || j < 0 || j >= ap_data->x_count[ap_data->level - 1000] || i >= ap_data->y_count[ap_data->level - 1000] || ap_data->board_state[i][j] > mine_num8_closed)
 				continue;    // 범위를 벗어나거나 닫히지 않은 것들을 만나면 건너뛰기
 
-			ap_data->board_state[y][x] += 10;    // 10을 더해 열어준다
+			ap_data->board_state[i][j] += 10;    // 10을 더해 열어준다
 
 			// 열린 빈칸이면 함수를 다시 호출하여 그 칸에서도 다시 빈칸들을 열어준다
-			if (ap_data->board_state[y][x] == nothing_open) {
-				openNothingClosed(ap_data, x, y);    // 재귀
+			if (ap_data->board_state[i][j] == nothing_open) {
+				openNothingClosed(ap_data, j, i);    // 재귀 호출
 			}
 		}
 	}
