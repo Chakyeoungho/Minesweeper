@@ -463,11 +463,13 @@ int main()
 	struct stat buffer;    // stat를 사용하기 위한 구조체
 
 	if (stat("MinesweeperRank.bin", &buffer) == -1) {    // 파일이 없으면
+		MessageBox(gh_main_wnd, "랭킹 파일 생성.", "알림", MB_ICONINFORMATION | MB_OK);
 		// 랭킹 파일이 없으면 파일을 만들고 모두 UINT64의 최대값으로 초기화
 		// 파일이 있으면 0을 반환
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 형식으로 열기
 		if (fp == NULL) {    // 파일 열기에 실패하면
 			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+			fclose(fp);
 			return 0;    // 종료
 		}
 
