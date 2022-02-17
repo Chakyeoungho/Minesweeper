@@ -98,7 +98,8 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 			}
 
 			return;
-		} else {    // 마우스 왼쪽 버튼만 눌렀을 경우
+		}
+		else {    // 마우스 왼쪽 버튼만 눌렀을 경우
 			resetClickState(p_data);    // 클릭 초기화
 
 			if (a_pos.x > 0 && a_pos.y > 0 &&
@@ -127,7 +128,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 				a_pos.x < p_data->x_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] &&
 				a_pos.y < p_data->y_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] &&    // 범위 확인
 				a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
-				a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000] &&  
+				a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000] &&
 				p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] >= nothing_open &&
 				p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] <= mine_num8_open) {
 				// 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
@@ -137,12 +138,13 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 			drawBoard(p_data);    // 판 그리기
 
 			return;
-		} else {    // 마우스 왼쪽 버튼만 눌렀을 경우
+		}
+		else {    // 마우스 왼쪽 버튼만 눌렀을 경우
 			resetClickState(p_data);     // 클릭 초기화
 
 			// 좌클릭으로 판 열기, 좌클릭을 눌렀을 때 타일과 땠을 때 타일이 같은지 확인
-			if (a_pos.x > 0 && a_pos.y > 0 && 
-				a_pos.x < p_data->x_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] && 
+			if (a_pos.x > 0 && a_pos.y > 0 &&
+				a_pos.x < p_data->x_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] &&
 				a_pos.y < p_data->y_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] &&    // 범위 확인
 				a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
 				a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
@@ -168,7 +170,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 	pGameData p_data = (pGameData)GetAppData();
 
 	switch (a_ctrl_id) {
-	// 다시 시작 버튼
+		// 다시 시작 버튼
 	case RESTART:
 		p_data->game_step = PLAYGAME;    // 게임 스텝 게임중으로 변경
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
@@ -180,7 +182,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
 		drawBoard(p_data);    // 판 그리기
 		break;
-	// 타이틀 버튼
+		// 타이틀 버튼
 	case TITLE:
 		Clear();    // 화면 초기화
 		TextOut(10, 10, BLACK, "Minesweeper");    // 제목
@@ -203,7 +205,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->game_step = SELECTLV;    // 난이도 선택단계로 수정
 		ShowDisplay();
 		break;
-	// 난이도 버튼
+		// 난이도 버튼
 	case EASY: case NORMAL: case HARD:
 		p_data->level = a_ctrl_id;    // 선택한 난이도 저장
 		p_data->game_step = PLAYGAME;    // 다음단계로 이동
@@ -231,7 +233,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 3. 주변 지뢰의 개수만큼 깃발을 놓고 마우스 휠 클릭 or 왼쪽         더블클릭 or 마우스 왼쪽 버튼과 컨트롤 키를 클릭시 주변 8       칸이 열립니다.\n \
 4. 숫자가 적힌 타일은 주변 지뢰의 개수를 나타냅니다.", "규칙", MB_ICONINFORMATION | MB_OK);
 		break;
-	// 랭킹 버튼
+		// 랭킹 버튼
 	case RANK:
 		switch (p_data->rankB_toggle) {
 		case 0:
@@ -298,7 +300,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->rankB_toggle = !p_data->rankB_toggle;    // 랭킹버튼 토글
 		ShowDisplay();
 		break;
-	// 랭킹 초기화
+		// 랭킹 초기화
 	case CLEARRANK:
 		Clear();    // 화면 초기화
 
@@ -404,7 +406,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 		if (p_data->game_step == PLAYGAME) {
 			resetClickState(p_data);     // 클릭 초기화
 
-			if (x_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] && 
+			if (x_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
 				y_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
 				// 첫 클릭 시 시간 초기화
 				if (p_data->isClicked == false) {
@@ -457,7 +459,7 @@ int main()
 					  { EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM  },    // 지뢰의 개수
 					  0, SELECTLV, 0, 0, false, false };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
-	
+
 	Rank temp;    // 임시 변수
 	FILE *fp = NULL;    // 파일 포인터 생성
 	struct stat buffer;    // stat를 사용하기 위한 구조체
@@ -488,7 +490,7 @@ int main()
 
 		fclose(fp);    // 파일 닫기
 	}
-	
+
 	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
 	CreateSelectLVButton();    // 난이도 선택 버튼 생성
 	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
@@ -606,12 +608,13 @@ void randMine(pGameData ap_data, int x, int y)
 	int tempMineNum = 0;    // 현재 생성된 지뢰 개수
 
 	while (tempMineNum != ap_data->mineNum[ap_data->level - 1000]) {    // 난이도에 따른 지뢰 개수만큼
-		if (ap_data->board_state[tempY = (rand() % ap_data->y_count[ap_data->level - 1000])][tempX = (rand() % ap_data->x_count[ap_data->level - 1000])] != mine && 
+		if (ap_data->board_state[tempY = (rand() % ap_data->y_count[ap_data->level - 1000])][tempX = (rand() % ap_data->x_count[ap_data->level - 1000])] != mine &&
 			tempX != x && tempY != y) {    // 지뢰가 없으면 지뢰 생성
 			if (ap_data->board_state[tempY][tempX] == flag || ap_data->board_state[tempY][tempX] == questionMark) {    // 깃발이나 물음표가 있으면 임시 판에 지뢰 생성
 				ap_data->board_temp[tempY][tempX] = mine;
 				tempMineNum++;
-			} else {    // 아니면 그냥 생성
+			}
+			else {    // 아니면 그냥 생성
 				ap_data->board_state[tempY][tempX] = mine;
 				tempMineNum++;
 			}
@@ -625,7 +628,8 @@ void randMine(pGameData ap_data, int x, int y)
 
 					if (ap_data->board_state[y][x] == flag || ap_data->board_state[y][x] == questionMark) {    // 깃발이나 물음표가 있으면 임시 판에 지뢰 개수 증가
 						ap_data->board_temp[y][x]++;
-					} else {    // 아니면 그냥 지뢰 개수 증가
+					}
+					else {    // 아니면 그냥 지뢰 개수 증가
 						ap_data->board_state[y][x]++;
 					}
 				}
