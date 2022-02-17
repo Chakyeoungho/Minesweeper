@@ -26,19 +26,21 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	BYTE board_state[HARD_Y_COUNT][HARD_X_COUNT];    // 가장 큰 사이즈의 보드만 있어도 모든 난이도의 게임을 만들 수 있다
 	BYTE board_temp[HARD_Y_COUNT][HARD_X_COUNT];     // 깃발과 물음표를 사용할 때 원래 보드의 상태를 기억
 	BYTE click_state[HARD_Y_COUNT][HARD_X_COUNT];    // 판 클릭 상태
-	BYTE gridSize[3];     // 타일 하나의 크기 배열
-	BYTE x_count[3];      // x축 타일의 개수
-	BYTE y_count[3];      // y축 타일의 개수
-	BYTE mineNum[3];      // 지뢰의 개수
-	BYTE currFlagNum;     // 현재 깃발의 개수
-	BYTE game_step;       // 현재 게임 단계
-	BYTE rankB_toggle;    // 랭킹 버튼 토글용 변수
-	WORD level;           // 선택한 난이도
-	bool isClicked;       // 게임 시작후 유효한 첫 클릭을 했는지 체크할 변수
-	bool isMLBClicked;    // 게임 시작후 마우스 왼쪽 버튼을 클릭 했는지 체크하는 변수
-	UINT64 start_time;    // 시작 시간
-	UINT64 curr_time;     // 현재 시간
-	POINT temp_pos;       // 임시 커서 좌표
+	BYTE gridSize[3];            // 타일 하나의 크기 배열
+	BYTE x_count[3];             // x축 타일의 개수
+	BYTE y_count[3];             // y축 타일의 개수
+	BYTE mineNum[3];             // 지뢰의 개수
+	BYTE currFlagNum;            // 현재 깃발의 개수
+	BYTE game_step;              // 현재 게임 단계
+	BYTE rankB_toggle;           // 랭킹 버튼 토글용 변수
+	WORD level;                  // 선택한 난이도
+	bool isFirstClicked;         // 게임 시작후 유효한 첫 클릭을 했는지 체크할 변수
+	bool isFirstMLBClicked;      // 게임 시작후 마우스 왼쪽 버튼을 클릭 했는지 체크하는 변수
+	bool isMLBClicked;           // 좌클릭 확인
+	bool isMRBClicked;           // 우클릭 확인
+	UINT64 start_time;           // 시작 시간
+	UINT64 curr_time;            // 현재 시간
+	POINT down_pos;              // 눌렀을 때 커서 좌표
 	GameButton button_adress;    // 게임 버튼 주소 모아놓은 구조체
 } GameData, *pGameData;
 #pragma pack(pop)
@@ -60,7 +62,7 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 {
 	pGameData ap_data = (pGameData)GetAppData();
 
-	if (ap_data->game_step == PLAYGAME && ap_data->isClicked) {    // 게임 중, 첫 클릭을 했을 때만
+	if (ap_data->game_step == PLAYGAME && ap_data->isFirstClicked) {    // 게임 중, 첫 클릭을 했을 때만
 		ap_data->curr_time = GetTickCount64() - ap_data->start_time;    // 현재 시간 구하기
 		Rectangle(5, 495, 67, 523, WHITE, WHITE);    // 숫자 지우는 용도
 		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
@@ -72,95 +74,71 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 {
 	pGameData p_data = (pGameData)GetAppData();
-	p_data->temp_pos = a_pos;    // 눌렀을 때 좌표를 저장
 
 	if (p_data->game_step == PLAYGAME) {
+		int x = (int)a_pos.x / p_data->gridSize[p_data->level - 1000], y = (int)a_pos.y / p_data->gridSize[p_data->level - 1000];    // 좌표
+		resetClickState(p_data);    // 클릭 초기화
+		p_data->isMLBClicked = true;
+
 		// 마우스 왼쪽 버튼과 컨트롤 키를 동시에 눌렀을 경우
-		if (a_mixed_key & MK_CONTROL) {
-			resetClickState(p_data);    // 클릭 초기화
+		if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
+			p_data->down_pos = a_pos;    // 눌렀을 때 좌표를 저장
 
-			if (a_pos.x > 0 && a_pos.y > 0 &&
-				a_pos.x < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
-				a_pos.y < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
-
+			if (a_mixed_key & MK_CONTROL || p_data->isMRBClicked) {
 				// 휠을 클릭 했을 때 주변 8칸을 클릭
-				for (int i = a_pos.y / p_data->gridSize[p_data->level - 1000] - 1; i <= a_pos.y / p_data->gridSize[p_data->level - 1000] + 1; i++) {
-					for (int j = a_pos.x / p_data->gridSize[p_data->level - 1000] - 1; j <= a_pos.x / p_data->gridSize[p_data->level - 1000] + 1; j++) {
+				for (int i = y - 1; i <= y + 1; i++) {
+					for (int j = x - 1; j <= x + 1; j++) {
 						if (i < 0 || j < 0 || i >= p_data->y_count[p_data->level - 1000] || j >= p_data->x_count[p_data->level - 1000] ||
-							(i == a_pos.y / p_data->gridSize[p_data->level - 1000] && j == a_pos.x / p_data->gridSize[p_data->level - 1000]) ||
+							(i == y && j == x) ||
 							(p_data->board_state[i][j] >= nothing_open && p_data->board_state[i][j] <= mine_num8_open))
 							continue;    // 열린 것들이나 범위를 벗어나면 건너뛰기
 
 						p_data->click_state[i][j] = CLICKED;    // 클릭
 					}
 				}
-				drawBoard(p_data);    // 판 그리기
+			} else {    // 마우스 왼쪽 버튼만 눌렀을 경우
+				if (p_data->board_state[y][x] <= mine) {    // 닫힌 칸만
+					p_data->click_state[y][x] = CLICKED;    // 클릭
+				}
 			}
-
-			return;
-		}
-		else {    // 마우스 왼쪽 버튼만 눌렀을 경우
-			resetClickState(p_data);    // 클릭 초기화
-
-			if (a_pos.x > 0 && a_pos.y > 0 &&
-				a_pos.x < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
-				a_pos.y < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] &&    // 마우스 좌표 볌위 확인
-				p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] <= mine) {
-				p_data->click_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] = CLICKED;    // 클릭
-				drawBoard(p_data);    // 판 그리기
-			}
+			drawBoard(p_data);    // 판 그리기
 		}
 	}
 }
 
-// 마우스 왼쪽 버튼을 땠을 때 호출될 함수
+	// 마우스 왼쪽 버튼을 땠을 때 호출될 함수
 void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 {
 	pGameData p_data = (pGameData)GetAppData();
 
 	if (p_data->game_step == PLAYGAME) {
+		int x = (int)a_pos.x / p_data->gridSize[p_data->level - 1000], y = (int)a_pos.y / p_data->gridSize[p_data->level - 1000];    // 좌표
+		int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)p_data->down_pos.y / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
+		resetClickState(p_data);    // 클릭 초기화
+		p_data->isMLBClicked = false;
 
-		// 마우스 왼쪽 버튼과 컨트롤 키를 동시에 눌렀을 경우
-		if (a_mixed_key & MK_CONTROL) {
-			resetClickState(p_data);    // 클릭 초기화
-
-			if (a_pos.x > 0 && a_pos.y > 0 &&
-				a_pos.x < p_data->x_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] &&
-				a_pos.y < p_data->y_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] &&    // 범위 확인
-				a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
-				a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000] &&
-				p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] >= nothing_open &&
-				p_data->board_state[a_pos.y / p_data->gridSize[p_data->level - 1000]][a_pos.x / p_data->gridSize[p_data->level - 1000]] <= mine_num8_open) {
-				// 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
-				checkAndOpen8Board(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);
-				checkClear(p_data);    // 게임 클리어 확인
-			}
-			drawBoard(p_data);    // 판 그리기
-
-			return;
-		}
-		else {    // 마우스 왼쪽 버튼만 눌렀을 경우
-			resetClickState(p_data);     // 클릭 초기화
-
-			// 좌클릭으로 판 열기, 좌클릭을 눌렀을 때 타일과 땠을 때 타일이 같은지 확인
-			if (a_pos.x > 0 && a_pos.y > 0 &&
-				a_pos.x < p_data->x_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] &&
-				a_pos.y < p_data->y_count[p_data->level - 1000] * p_data->gridSize[p_data->level - 1000] &&    // 범위 확인
-				a_pos.x / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
-				a_pos.y / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
+		if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 범위 확인
+			x == downX && y == downY) {    // 눌렀었을 때와 같은 타일인지 검사
+			// 마우스 왼쪽 버튼과 컨트롤 키를 동시에 눌렀을 경우
+			if (a_mixed_key & MK_CONTROL || p_data->isMRBClicked) {
+				if (p_data->board_state[y][x] >= nothing_open && p_data->board_state[y][x] <= mine_num8_open) {
+					checkAndOpen8Board(p_data, x, y);    // 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
+					checkClear(p_data);    // 게임 클리어 확인
+				}
+			} else {    // 마우스 왼쪽 버튼만 눌렀을 경우
 				// 첫 클릭 시 시간 초기화
-				if (p_data->isMLBClicked == false) {
-					randMine(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);    // 지뢰 랜덤으로 생성
+				if (p_data->isFirstMLBClicked == false) {
+					randMine(p_data, x, y);    // 지뢰 랜덤으로 생성
 					p_data->start_time = GetTickCount64();    // 시작 시간 재설정
-					p_data->isClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
-					p_data->isMLBClicked = true;    // 처음 좌클릭 때 클릭된 타일을 제외하고 지뢰를 생성하기 위한 변수
+					p_data->isFirstClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
+					p_data->isFirstMLBClicked = true;    // 처음 좌클릭 때 클릭된 타일을 제외하고 지뢰를 생성하기 위한 변수
 				}
 
-				clickBoard(p_data, a_pos.x / p_data->gridSize[p_data->level - 1000], a_pos.y / p_data->gridSize[p_data->level - 1000]);    // 판 클릭
+				clickBoard(p_data, x, y);    // 판 클릭
 				checkClear(p_data);    // 클리어 했는지 확인
 			}
-			drawBoard(p_data);    // 판 그리기
 		}
+		drawBoard(p_data);    // 판 그리기
 	}
 }
 
@@ -174,8 +152,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 	case RESTART:
 		p_data->game_step = PLAYGAME;    // 게임 스텝 게임중으로 변경
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
-		p_data->isClicked = false;    // 첫 클릭 안한것으로 수정
-		p_data->isMLBClicked = false;    // 첫 좌클릭 안한것으로 수정
+		p_data->isFirstClicked = false;    // 첫 클릭 안한것으로 수정
+		p_data->isFirstMLBClicked = false;    // 첫 좌클릭 안한것으로 수정
 		memset(p_data, 0, sizeof(char) * 16 * 30 * 3);    // 게임정보 초기화
 
 		p_data->start_time = GetTickCount64();    // 시작 시간 재설정
@@ -200,8 +178,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 
 		memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
-		p_data->isClicked = false;    // 첫 클릭 안한것으로 수정
-		p_data->isMLBClicked = false;    // 첫 좌클릭 안한것으로 수정
+		p_data->isFirstClicked = false;    // 첫 클릭 안한것으로 수정
+		p_data->isFirstMLBClicked = false;    // 첫 좌클릭 안한것으로 수정
 		p_data->game_step = SELECTLV;    // 난이도 선택단계로 수정
 		ShowDisplay();
 		break;
@@ -354,17 +332,34 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	// 마우스 오른쪽 버튼을 누른 경우에 처리
 	if (a_message_id == WM_RBUTTONDOWN) {
 		if (p_data->game_step == PLAYGAME) {
-			// 눌렀을 때 좌표를 저장
-			p_data->temp_pos.x = x_pos;
-			p_data->temp_pos.y = y_pos;
+			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = y_pos / p_data->gridSize[p_data->level - 1000];    // 좌표
 			resetClickState(p_data);    // 클릭 초기화
+			p_data->isMRBClicked = true;
 
-			if (x_pos > 0 && y_pos > 0 &&
-				x_pos < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
-				y_pos < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
-				p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] <= mine) {
-				p_data->click_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] = CLICKED;    // 클릭
-				drawBoard(p_data);    // 판 그리기
+			if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
+				// 눌렀을 때 좌표를 저장
+				p_data->down_pos.x = x_pos;
+				p_data->down_pos.y = y_pos;
+
+				if (p_data->isMLBClicked) {
+					// 휠을 클릭 했을 때 주변 8칸을 클릭
+					for (int i = y - 1; i <= y + 1; i++) {
+						for (int j = x - 1; j <= x + 1; j++) {
+							if (i < 0 || j < 0 || i >= p_data->y_count[p_data->level - 1000] || j >= p_data->x_count[p_data->level - 1000] ||
+								(i == y && j == x) ||
+								(p_data->board_state[i][j] >= nothing_open && p_data->board_state[i][j] <= mine_num8_open))
+								continue;    // 열린 것들이나 범위를 벗어나면 건너뛰기
+
+							p_data->click_state[i][j] = CLICKED;    // 클릭
+						}
+					}
+					drawBoard(p_data);    // 판 그리기
+				} else {
+					if (p_data->board_state[y][x] <= mine || p_data->board_state[y][x] >= flag) {
+						p_data->click_state[y][x] = CLICKED;    // 클릭
+						drawBoard(p_data);    // 판 그리기
+					}
+				}
 			}
 		}
 
@@ -374,20 +369,19 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	// 마우스 휠 버튼을 누른 경우에 처리
 	if (a_message_id == WM_MBUTTONDOWN || a_message_id == WM_MBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
+			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = y_pos / p_data->gridSize[p_data->level - 1000];    // 좌표
 			resetClickState(p_data);    // 클릭 초기화
 
-			if (x_pos > 0 && y_pos > 0 &&
-				x_pos < p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000] &&
-				y_pos < p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
+			if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
 				// 눌렀을 때 좌표를 저장
-				p_data->temp_pos.x = x_pos;
-				p_data->temp_pos.y = y_pos;
+				p_data->down_pos.x = x_pos;
+				p_data->down_pos.y = y_pos;
 
 				// 휠을 클릭 했을 때 주변 8칸을 클릭
-				for (int i = y_pos / p_data->gridSize[p_data->level - 1000] - 1; i <= y_pos / p_data->gridSize[p_data->level - 1000] + 1; i++) {
-					for (int j = x_pos / p_data->gridSize[p_data->level - 1000] - 1; j <= x_pos / p_data->gridSize[p_data->level - 1000] + 1; j++) {
+				for (int i = y - 1; i <= y + 1; i++) {
+					for (int j = x - 1; j <= x + 1; j++) {
 						if (i < 0 || j < 0 || i >= p_data->y_count[p_data->level - 1000] || j >= p_data->x_count[p_data->level - 1000] ||
-							(i == y_pos / p_data->gridSize[p_data->level - 1000] && j == x_pos / p_data->gridSize[p_data->level - 1000]) ||
+							(i == y && j == x) ||
 							(p_data->board_state[i][j] >= nothing_open && p_data->board_state[i][j] <= mine_num8_open))
 							continue;    // 열린 것들이나 범위를 벗어나면 건너뛰기
 
@@ -404,17 +398,26 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	// 마우스 오른쪽 버튼을 땐 경우에 처리
 	if (a_message_id == WM_RBUTTONUP) {
 		if (p_data->game_step == PLAYGAME) {
+			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = y_pos / p_data->gridSize[p_data->level - 1000];    // 좌표
+			int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)p_data->down_pos.y / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
 			resetClickState(p_data);     // 클릭 초기화
+			p_data->isMRBClicked = false;
 
-			if (x_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.x / p_data->gridSize[p_data->level - 1000] &&
-				y_pos / p_data->gridSize[p_data->level - 1000] == p_data->temp_pos.y / p_data->gridSize[p_data->level - 1000]) {
-				// 첫 클릭 시 시간 초기화
-				if (p_data->isClicked == false) {
-					p_data->start_time = GetTickCount64();    // 시작 시간 재설정
-					p_data->isClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
+			if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
+				x == downX && y == downY) {
+				if (p_data->isMLBClicked) {
+					// 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
+					checkAndOpen8Board(p_data, x, y);
+					checkClear(p_data);    // 게임 클리어 확인
+				} else {
+					// 첫 클릭 시 시간 초기화
+					if (p_data->isFirstClicked == false) {
+						p_data->start_time = GetTickCount64();    // 시작 시간 재설정
+						p_data->isFirstClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
+					}
+
+					flagQuesBoard(p_data, x, y);    // 깃발, 물음표
 				}
-
-				flagQuesBoard(p_data, x_pos / p_data->gridSize[p_data->level - 1000], y_pos / p_data->gridSize[p_data->level - 1000]);    // 깃발, 물음표
 			}
 			drawBoard(p_data);    // 판 그리기
 		}
@@ -425,12 +428,14 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	// 마우스 휠버튼, 더블클릭, 양쪽 보튼 클릭 후 오른쪽 버튼을 땜
 	if (a_message_id == WM_MBUTTONUP || a_message_id == WM_LBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
+			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = y_pos / p_data->gridSize[p_data->level - 1000];    // 좌표
+			int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)p_data->down_pos.y / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
 			resetClickState(p_data);    // 클릭 초기화
 
-			if (p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] >= nothing_open &&
-				p_data->board_state[y_pos / p_data->gridSize[p_data->level - 1000]][x_pos / p_data->gridSize[p_data->level - 1000]] <= mine_num8_open) {
+			if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
+				p_data->board_state[y][x] >= nothing_open && p_data->board_state[y][x] <= mine_num8_open) {
 				// 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
-				checkAndOpen8Board(p_data, x_pos / p_data->gridSize[p_data->level - 1000], y_pos / p_data->gridSize[p_data->level - 1000]);
+				checkAndOpen8Board(p_data, x, y);
 				checkClear(p_data);    // 게임 클리어 확인
 			}
 			drawBoard(p_data);    // 판 그리기
@@ -457,7 +462,7 @@ int main()
 					  { EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT   },    // x축 타일의 개수
 					  { EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT   },    // y축 타일의 개수
 					  { EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM  },    // 지뢰의 개수
-					  0, SELECTLV, 0, 0, false, false };
+					  0, SELECTLV, 0, 0, false, false, false, false };
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 
 	Rank temp;    // 임시 변수
