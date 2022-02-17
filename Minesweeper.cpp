@@ -114,7 +114,6 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 		int x = (int)a_pos.x / p_data->gridSize[p_data->level - 1000], y = (int)a_pos.y / p_data->gridSize[p_data->level - 1000];    // 좌표
 		int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)p_data->down_pos.y / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
 		resetClickState(p_data);    // 클릭 초기화
-		p_data->isMLBClicked = false;
 
 		if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 범위 확인
 			x == downX && y == downY) {    // 눌렀었을 때와 같은 타일인지 검사
@@ -124,7 +123,8 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 					checkAndOpen8Board(p_data, x, y);    // 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
 					checkClear(p_data);    // 게임 클리어 확인
 				}
-			} else {    // 마우스 왼쪽 버튼만 눌렀을 경우
+				p_data->isMRBClicked = false;
+			} else if (p_data->isMLBClicked) {    // 마우스 왼쪽 버튼만 눌렀을 경우
 			 // 첫 클릭 시 시간 초기화
 				if (p_data->isFirstMLBClicked == false) {
 					randMine(p_data, x, y);    // 지뢰 랜덤으로 생성
@@ -133,6 +133,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 					p_data->isFirstMLBClicked = true;    // 처음 좌클릭 때 클릭된 타일을 제외하고 지뢰를 생성하기 위한 변수
 				}
 
+				p_data->isMLBClicked = false;
 				clickBoard(p_data, x, y);    // 판 클릭
 				checkClear(p_data);    // 클리어 했는지 확인
 			}
@@ -406,7 +407,6 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = y_pos / p_data->gridSize[p_data->level - 1000];    // 좌표
 			int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)p_data->down_pos.y / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
 			resetClickState(p_data);     // 클릭 초기화
-			p_data->isMRBClicked = false;
 
 			if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
 				x == downX && y == downY) {
@@ -414,13 +414,15 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 					// 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
 					checkAndOpen8Board(p_data, x, y);
 					checkClear(p_data);    // 게임 클리어 확인
-				} else {
+					p_data->isMLBClicked = false;
+				} else if (p_data->isMRBClicked) {
 					// 첫 클릭 시 시간 초기화
 					if (p_data->isFirstClicked == false) {
 						p_data->start_time = GetTickCount64();    // 시작 시간 재설정
 						p_data->isFirstClicked = true;    // 처음 우클릭이나 좌클릭을 했을 때 부터 시간을 재기 위한 변수
 					}
 
+					p_data->isMRBClicked = false;
 					flagQuesBoard(p_data, x, y);    // 깃발, 물음표
 				}
 			}
@@ -482,7 +484,7 @@ int main()
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 형식으로 열기
 		if (fp == NULL) {    // 파일 열기에 실패하면
 			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
-			fclose(fp);
+			fclose(fp);    // 파일 닫기
 			return 0;    // 종료
 		}
 
