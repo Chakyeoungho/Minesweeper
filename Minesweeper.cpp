@@ -139,6 +139,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 			}
 		}
 
+		p_data->isMLBClicked = false;
 		drawBoard(p_data);    // 판 그리기
 	}
 }
@@ -427,6 +428,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 				}
 			}
 
+			p_data->isMRBClicked = false;
 			drawBoard(p_data);    // 판 그리기
 		}
 
