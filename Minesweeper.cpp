@@ -10,6 +10,7 @@
 typedef struct _Rank
 {
 	UINT64 rank[3][10];    // 랭킹 저장할 배열, 정렬하기 편하게 가로 세로의 값을 정함
+	double winningPercentage[2][3];    // 승률
 } Rank, *pRank;
 
 typedef struct _GameButton
@@ -77,7 +78,7 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 
 	if (p_data->game_step == PLAYGAME) {
 		int x = (int)a_pos.x / p_data->gridSize[p_data->level - 1000], y = (int)a_pos.y / p_data->gridSize[p_data->level - 1000];    // 좌표
-		p_data->isMLBClicked = true;
+		p_data->isMLBClicked = true;    // 마우스 왼쪽 누름
 
 		// 마우스 왼쪽 버튼과 컨트롤 키를 동시에 눌렀을 경우
 		if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
@@ -122,7 +123,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 					checkClear(p_data);    // 게임 클리어 확인
 				}
 
-				p_data->isMRBClicked = false;
+				p_data->isMRBClicked = false;    // 마우스 오른쪽 땜
 			} else if (p_data->isMLBClicked) {    // 마우스 왼쪽 버튼만 눌렀을 경우
 			 // 첫 클릭 시 시간 초기화
 				if (p_data->isFirstMLBClicked == false) {
@@ -137,7 +138,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 			}
 		}
 
-		p_data->isMLBClicked = false;
+		p_data->isMLBClicked = false;    // 마우스 왼쪽 땜
 		drawBoard(p_data);    // 판 그리기
 	}
 }
@@ -154,8 +155,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
 		p_data->isFirstClicked = false;    // 첫 클릭 안한것으로 수정
 		p_data->isFirstMLBClicked = false;    // 첫 좌클릭 안한것으로 수정
-		p_data->isMLBClicked = false;
-		p_data->isMRBClicked = false;
+		p_data->isMLBClicked = false;    // 마우스 왼쪽 땜
+		p_data->isMRBClicked = false;    // 마우스 오른쪽 땜
 		memset(p_data, 0, sizeof(char) * 16 * 30 * 3);    // 게임정보 초기화
 
 		p_data->start_time = GetTickCount64();    // 시작 시간 재설정
@@ -182,8 +183,6 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
 		p_data->isFirstClicked = false;    // 첫 클릭 안한것으로 수정
 		p_data->isFirstMLBClicked = false;    // 첫 좌클릭 안한것으로 수정
-		p_data->isMLBClicked = false;
-		p_data->isMRBClicked = false;
 		p_data->game_step = SELECTLV;    // 난이도 선택단계로 수정
 		ShowDisplay();
 		break;
@@ -205,8 +204,8 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 
 		p_data->start_time = GetTickCount64();    // 시간 초기화
 		p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
-		p_data->isMLBClicked = false;
-		p_data->isMRBClicked = false;
+		p_data->isMLBClicked = false;    // 마우스 왼쪽 땜
+		p_data->isMRBClicked = false;    // 마우스 오른쪽 땜
 		drawBoard(p_data);    // 판 그리기
 		break;
 	// 룰 버튼
@@ -237,6 +236,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 바이너리 읽기 모드로 열기
 			if (fp == NULL) {    // 파일 열기에 실패하면
 				MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+				fclose(fp);    // 파일 닫기
 				return;    // 종료
 			}
 
@@ -264,6 +264,15 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 				TextOut(30, 150 + (28 * i), "%2d.", i + 1);    // 랭킹 순서 출력 -> 1 ~ 10
 			}
 
+			// 승률 영어로 출력
+			TextOut(25, 472, "Winning");
+			TextOut(5, 500, "Percentage");
+
+			// 단계별 승률 출력
+			TextOut(120, 486, "%f %%", (data.winningPercentage[1][0] / data.winningPercentage[0][0]) * 100);
+			TextOut(320, 486, "%f %%", (data.winningPercentage[1][1] / data.winningPercentage[0][1]) * 100);
+			TextOut(520, 486, "%f %%", (data.winningPercentage[1][2] / data.winningPercentage[0][2]) * 100);
+			
 			fclose(fp);    // 파일 닫기
 			break;
 		}    // 중괄호로 감싸줘야 파일을 사용할 수 있음
@@ -293,6 +302,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 모드로 열기
 		if (fp == NULL) {    // 파일 열기에 실패하면
 			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+			fclose(fp);    // 파일 닫기
 			return;    // 종료
 		}
 
@@ -339,7 +349,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	if (a_message_id == WM_RBUTTONDOWN || a_message_id == WM_RBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
 			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = y_pos / p_data->gridSize[p_data->level - 1000];    // 좌표
-			p_data->isMRBClicked = true;
+			p_data->isMRBClicked = true;    // 마우스 오른쪽 누름
 
 			if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
 				// 눌렀을 때 좌표를 저장
@@ -411,7 +421,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 					checkAndOpen8Board(p_data, x, y);
 					checkClear(p_data);    // 게임 클리어 확인
 
-					p_data->isMLBClicked = false;
+					p_data->isMLBClicked = false;    // 마우스 왼쪽 땜
 				} else if (p_data->isMRBClicked) {
 					// 첫 클릭 시 시간 초기화
 					if (p_data->isFirstClicked == false) {
@@ -423,7 +433,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 				}
 			}
 
-			p_data->isMRBClicked = false;
+			p_data->isMRBClicked = false;    // 마우스 오른쪽 땜
 			drawBoard(p_data);    // 판 그리기
 		}
 
@@ -487,6 +497,12 @@ int main()
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 10; j++) {
 				temp.rank[i][j] = ULLONG_MAX;    // 자료형의 최대값으로 초기화
+			}
+		}
+
+		for (int i = 0; i < 2; i++) {
+			for (int j = 0; j < 3; j++) {
+				temp.winningPercentage[i][j] = 0;    // 게임 플레이 카운트 초기화
 			}
 		}
 
@@ -584,12 +600,14 @@ void drawBoard(pGameData ap_data)
 
 	// 게임 클리어시 걸린 시간 출력
 	if (ap_data->game_step == CLEARGME) {
+		// 시, 분, 초 구하기
 		UINT64 minute = ap_data->curr_time / 60000;
 		UINT64 sec = (ap_data->curr_time % 60000) / 1000;
 		UINT64 mSec = ap_data->curr_time % 1000;
 
-		TextOut(400, 500, RGB(100, 255, 100), "Game Clear!");
-		TextOut(550, 500, BLACK, "Time : %02llu'%02llu\"%03llu", minute, sec, mSec);
+		TextOut(400, 500, RGB(100, 255, 100), "Game Clear!");    // 게임 클리어!
+		TextOut(550, 500, BLACK, "Time : %02llu'%02llu\"%03llu", minute, sec, mSec);    // 걸린 시간 출력
+		writeRank(ap_data);    // 랭킹 작성
 	}
 
 	// 게임오버시 지뢰의 위치와 깃발로 잘못 찾은 지뢰 출력
@@ -603,7 +621,8 @@ void drawBoard(pGameData ap_data)
 			}
 		}
 
-		TextOut(400, 500, RGB(255, 0, 0), "Game Over!");
+		TextOut(400, 500, RGB(255, 0, 0), "Game Over!");    // 게임 오버!
+		writeRank(ap_data);    // 랭킹 작성
 	}
 
 	resetClickState(ap_data);    // 클릭 상태 초기화
@@ -619,7 +638,7 @@ void randMine(pGameData ap_data, int x, int y)
 
 	while (tempMineNum != ap_data->mineNum[ap_data->level - 1000]) {    // 난이도에 따른 지뢰 개수만큼
 		if (ap_data->board_state[tempY = (rand() % ap_data->y_count[ap_data->level - 1000])][tempX = (rand() % ap_data->x_count[ap_data->level - 1000])] != mine &&
-			tempX != x && tempY != y) {    // 지뢰가 없으면 지뢰 생성
+			tempX != x && tempY != y) {    // 지뢰가 없거나 처음 좌클릭 한 부분 빼고 지뢰 생성
 			if (ap_data->board_state[tempY][tempX] == flag || ap_data->board_state[tempY][tempX] == questionMark) {    // 깃발이나 물음표가 있으면 임시 판에 지뢰 생성
 				ap_data->board_temp[tempY][tempX] = mine;
 				tempMineNum++;
@@ -675,10 +694,8 @@ void checkClear(pGameData ap_data)
 		}
 	}
 
-	if (closedTile == ap_data->mineNum[ap_data->level - 1000]) {    // 닫힌 타일의 개수가 지뢰의 개수와 같으면
+	if (closedTile == ap_data->mineNum[ap_data->level - 1000])    // 닫힌 타일의 개수가 지뢰의 개수와 같으면
 		ap_data->game_step = CLEARGME;    // 게임 단계를 클리어로 수정
-		writeRank(ap_data);
-	}
 }
 
 // 게임 클리어 시간 랭킹 작성
@@ -691,6 +708,7 @@ void writeRank(pGameData ap_data)
 	fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 읽기 용도로 열기
 	if (fp == NULL) {    // 파일 열기에 실패하면
 		MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+		fclose(fp);    // 파일 닫기
 		return;    // 종료
 	}
 
@@ -703,15 +721,37 @@ void writeRank(pGameData ap_data)
 	fclose(fp);    // 파일 닫기
 
 	// 랭킹 업데이트
-	if (ap_data->curr_time < data.rank[ap_data->level - 1000][9]) {    // 랭킹 10위 이내에 들면
+	if (ap_data->game_step == CLEARGME) {
+		if (ap_data->curr_time < data.rank[ap_data->level - 1000][9]) {    // 랭킹 10위 이내에 들면
+			fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
+			if (fp == NULL) {    // 파일 열기에 실패하면
+				MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+				fclose(fp);    // 파일 닫기
+				return;    // 종료
+			}
+
+			data.winningPercentage[0][ap_data->level - 1000]++;    // 플래이 카운트
+			data.winningPercentage[1][ap_data->level - 1000]++;    // 클리어 횟수
+			data.rank[ap_data->level - 1000][9] = ap_data->curr_time;    // 시간 저장
+			rank_bubble_sort(data.rank[ap_data->level - 1000], 10);    // 랭킹 정렬
+
+			if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
+				MessageBox(gh_main_wnd, "파일 쓰기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+				fclose(fp);    // 파일 닫기
+				return;    // 파일 포인터 생성
+			}
+
+			fclose(fp);    // 파일 닫기
+		}
+	} else if (ap_data->game_step == GAMEOVER) {
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
 		if (fp == NULL) {    // 파일 열기에 실패하면
 			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+			fclose(fp);    // 파일 닫기
 			return;    // 종료
 		}
-
-		data.rank[ap_data->level - 1000][9] = ap_data->curr_time;
-		rank_bubble_sort(data.rank[ap_data->level - 1000], 10);
+		
+		data.winningPercentage[0][ap_data->level - 1000]++;    // 플래이 카운트
 
 		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
 			MessageBox(gh_main_wnd, "파일 쓰기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
@@ -726,11 +766,11 @@ void writeRank(pGameData ap_data)
 // 랭킹 정렬
 void rank_bubble_sort(UINT64 arr[], int count)
 {
-	UINT64 temp;
+	UINT64 temp;    // 임시 변수
 
 	for (int i = 0; i < count; i++) {
 		for (int j = 0; j < count - 1 - i; j++) {
-			if (arr[j] >= arr[j + 1]) {
+			if (arr[j] >= arr[j + 1]) {    // 오름차순으로 정렬
 				temp = arr[j];
 				arr[j] = arr[j + 1];
 				arr[j + 1] = temp;
