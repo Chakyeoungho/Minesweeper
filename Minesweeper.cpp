@@ -236,7 +236,6 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 바이너리 읽기 모드로 열기
 			if (fp == NULL) {    // 파일 열기에 실패하면
 				MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
-				fclose(fp);    // 파일 닫기
 				return;    // 종료
 			}
 
@@ -302,7 +301,6 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 모드로 열기
 		if (fp == NULL) {    // 파일 열기에 실패하면
 			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
-			fclose(fp);    // 파일 닫기
 			return;    // 종료
 		}
 
@@ -490,7 +488,6 @@ int main()
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 형식으로 열기
 		if (fp == NULL) {    // 파일 열기에 실패하면
 			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
-			fclose(fp);    // 파일 닫기
 			return 0;    // 종료
 		}
 
@@ -708,7 +705,6 @@ void writeRank(pGameData ap_data)
 	fopen_s(&fp, "MinesweeperRank.bin", "rb");    // 랭킹 파일을 읽기 용도로 열기
 	if (fp == NULL) {    // 파일 열기에 실패하면
 		MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
-		fclose(fp);    // 파일 닫기
 		return;    // 종료
 	}
 
@@ -726,7 +722,6 @@ void writeRank(pGameData ap_data)
 			fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
 			if (fp == NULL) {    // 파일 열기에 실패하면
 				MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
-				fclose(fp);    // 파일 닫기
 				return;    // 종료
 			}
 
@@ -747,7 +742,6 @@ void writeRank(pGameData ap_data)
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
 		if (fp == NULL) {    // 파일 열기에 실패하면
 			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
-			fclose(fp);    // 파일 닫기
 			return;    // 종료
 		}
 		
