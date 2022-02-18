@@ -53,7 +53,7 @@ void clickBoard(pGameData ap_data, int x, int y);    // 판 클릭
 void checkClear(pGameData ap_data);    // 클리어 확인
 void writeRank(pGameData ap_data);    // 랭킹 작성
 void rank_bubble_sort(UINT64 data[], int count);    // 랭킹 정렬
-void openNothingClosed(pGameData ap_data, int x_pos, int y_pos);    // 연쇄적으로 판 오픈
+void openNothingClosed(pGameData ap_data, int x, int y);    // 연쇄적으로 판 오픈
 void flagQuesBoard(pGameData ap_data, int x, int y);    // 깃발과 물음표 관리
 void checkAndOpen8Board(pGameData ap_data, int x, int y);    // 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
 
