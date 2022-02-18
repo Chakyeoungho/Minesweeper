@@ -268,9 +268,9 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			TextOut(5, 500, "Percentage");
 
 			// 단계별 승률 출력
-			TextOut(120, 486, "%f %%", (data.winningPercentage[1][0] / data.winningPercentage[0][0]) * 100);
-			TextOut(320, 486, "%f %%", (data.winningPercentage[1][1] / data.winningPercentage[0][1]) * 100);
-			TextOut(520, 486, "%f %%", (data.winningPercentage[1][2] / data.winningPercentage[0][2]) * 100);
+			TextOut(120, 486, "%f %%", (data.winningPercentage[0][0] / data.winningPercentage[1][0]) * 100);
+			TextOut(320, 486, "%f %%", (data.winningPercentage[0][1] / data.winningPercentage[1][1]) * 100);
+			TextOut(520, 486, "%f %%", (data.winningPercentage[0][2] / data.winningPercentage[1][2]) * 100);
 			
 			fclose(fp);    // 파일 닫기
 			break;
@@ -310,6 +310,12 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			}
 		}
 
+		for (int i = 0; i < 2; i++) {
+			for (int j = 0; j < 3; j++) {
+				data.winningPercentage[i][j] = 0;    // 게임 플레이 카운트 초기화
+			}
+		}
+
 		TextOut(120, 100, "Easy");      // 쉬움
 		TextOut(320, 100, "Normal");    // 보통
 		TextOut(520, 100, "Hard");      // 어려움
@@ -319,6 +325,11 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			}
 			TextOut(30, 150 + (28 * i), "%2d.", i + 1);    // 랭킹 순서 출력 -> 1 ~ 10
 		}
+
+		// 단계별 승률 출력
+		TextOut(120, 486, "%f %%", (data.winningPercentage[0][0] / data.winningPercentage[1][0]) * 100);
+		TextOut(320, 486, "%f %%", (data.winningPercentage[0][1] / data.winningPercentage[1][1]) * 100);
+		TextOut(520, 486, "%f %%", (data.winningPercentage[0][2] / data.winningPercentage[1][2]) * 100);
 
 		// data의 내용 파일에 쓰기, 쓰기 실패시 닫고 종료
 		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // 초기화 후 파일 작성
@@ -725,8 +736,8 @@ void writeRank(pGameData ap_data)
 				return;    // 종료
 			}
 
-			data.winningPercentage[0][ap_data->level - 1000]++;    // 플래이 카운트
-			data.winningPercentage[1][ap_data->level - 1000]++;    // 클리어 횟수
+			data.winningPercentage[0][ap_data->level - 1000]++;    // 클리어 횟수
+			data.winningPercentage[1][ap_data->level - 1000]++;    // 플래이 카운트
 			data.rank[ap_data->level - 1000][9] = ap_data->curr_time;    // 시간 저장
 			rank_bubble_sort(data.rank[ap_data->level - 1000], 10);    // 랭킹 정렬
 
@@ -745,7 +756,7 @@ void writeRank(pGameData ap_data)
 			return;    // 종료
 		}
 		
-		data.winningPercentage[0][ap_data->level - 1000]++;    // 플래이 카운트
+		data.winningPercentage[1][ap_data->level - 1000]++;    // 플래이 카운트
 
 		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
 			MessageBox(gh_main_wnd, "파일 쓰기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
