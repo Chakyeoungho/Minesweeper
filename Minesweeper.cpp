@@ -326,6 +326,10 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			TextOut(30, 150 + (28 * i), "%2d.", i + 1);    // 랭킹 순서 출력 -> 1 ~ 10
 		}
 
+		// 승률 영어로 출력
+		TextOut(25, 472, "Winning");
+		TextOut(5, 500, "Percentage");
+
 		// 단계별 승률 출력
 		TextOut(120, 486, "%f %%", (data.winningPercentage[0][0] / data.winningPercentage[1][0]) * 100);
 		TextOut(320, 486, "%f %%", (data.winningPercentage[0][1] / data.winningPercentage[1][1]) * 100);
