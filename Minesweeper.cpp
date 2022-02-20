@@ -81,8 +81,8 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 
 	if (ap_data->game_step == PLAYGAME && ap_data->isFirstClicked) {    // 게임 중, 첫 클릭을 했을 때만
 		ap_data->curr_time = GetTickCount64() - ap_data->start_time;    // 현재 시간 구하기
-		Rectangle(5, 495, 67, 523, WHITE, WHITE);    // 숫자 지우는 용도
-		TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
+		Rectangle(5, 15, 67, 43, WHITE, WHITE);    // 숫자 지우는 용도
+		TextOut(10, 20, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
 		ShowDisplay();    // 화면에 출력
 	}
 }
@@ -93,7 +93,7 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 	pGameData p_data = (pGameData)GetAppData();
 
 	if (p_data->game_step == PLAYGAME) {
-		int x = (int)a_pos.x / p_data->gridSize[p_data->level - 1000], y = (int)a_pos.y / p_data->gridSize[p_data->level - 1000];    // 좌표
+		int x = (int)a_pos.x / p_data->gridSize[p_data->level - 1000], y = (int)(a_pos.y - 60) / p_data->gridSize[p_data->level - 1000];    // 좌표
 		p_data->isMLBClicked = true;    // 마우스 왼쪽 누름
 
 		// 마우스 왼쪽 버튼과 컨트롤 키를 동시에 눌렀을 경우
@@ -127,8 +127,8 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 	pGameData p_data = (pGameData)GetAppData();
 
 	if (p_data->game_step == PLAYGAME) {
-		int x = (int)a_pos.x / p_data->gridSize[p_data->level - 1000], y = (int)a_pos.y / p_data->gridSize[p_data->level - 1000];    // 좌표
-		int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)p_data->down_pos.y / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
+		int x = (int)a_pos.x / p_data->gridSize[p_data->level - 1000], y = (int)(a_pos.y - 60) / p_data->gridSize[p_data->level - 1000];    // 좌표
+		int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)(p_data->down_pos.y - 60) / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
 
 		if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 범위 확인
 			x == downX && y == downY) {    // 눌렀었을 때와 같은 타일인지 검사
@@ -210,7 +210,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->level = a_ctrl_id;    // 선택한 난이도 저장
 		p_data->game_step = PLAYGAME;    // 다음단계로 이동
 
-		ChangeWorkSize(p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000], 550); // 작업 영역을 설정한다.
+		ChangeWorkSize(p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000], p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] + 60); // 작업 영역을 설정한다.
 		SelectFontObject("굴림", 20, 1);
 
 		// 난이도 선택 버튼 숨기기
@@ -383,7 +383,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	// 마우스 오른쪽 버튼을 누른 경우에 처리
 	if (a_message_id == WM_RBUTTONDOWN || a_message_id == WM_RBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
-			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = y_pos / p_data->gridSize[p_data->level - 1000];    // 좌표
+			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = (y_pos - 60) / p_data->gridSize[p_data->level - 1000];    // 좌표
 			p_data->isMRBClicked = true;    // 마우스 오른쪽 누름
 
 			if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
@@ -418,7 +418,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	// 마우스 휠 버튼을 누른 경우에 처리
 	if (a_message_id == WM_MBUTTONDOWN || a_message_id == WM_MBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
-			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = y_pos / p_data->gridSize[p_data->level - 1000];    // 좌표
+			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = (y_pos - 60) / p_data->gridSize[p_data->level - 1000];    // 좌표
 
 			if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
 				// 눌렀을 때 좌표를 저장
@@ -446,8 +446,8 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	// 마우스 오른쪽 버튼을 땐 경우에 처리
 	if (a_message_id == WM_RBUTTONUP) {
 		if (p_data->game_step == PLAYGAME) {
-			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = y_pos / p_data->gridSize[p_data->level - 1000];    // 좌표
-			int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)p_data->down_pos.y / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
+			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = (y_pos - 60) / p_data->gridSize[p_data->level - 1000];    // 좌표
+			int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)(p_data->down_pos.y - 60) / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
 
 			if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
 				x == downX && y == downY) {
@@ -478,8 +478,8 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	// 마우스 휠버튼, 더블클릭, 양쪽 보튼 클릭 후 오른쪽 버튼을 땜
 	if (a_message_id == WM_MBUTTONUP || a_message_id == WM_LBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
-			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = y_pos / p_data->gridSize[p_data->level - 1000];    // 좌표
-			int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)p_data->down_pos.y / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
+			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = (y_pos - 60) / p_data->gridSize[p_data->level - 1000];    // 좌표
+			int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)(p_data->down_pos.y - 60) / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
 
 			if (x >= 0 && y >= 0 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
 				p_data->board_state[y][x] >= nothing_open && p_data->board_state[y][x] <= mine_num8_open) {
@@ -576,8 +576,8 @@ void CreateSelectLVButton() {
 	// 게임 룰 버튼 만들고 주소 저장
 	ap_data->button_adress.p_game_rule = CreateButton("Rule", 310, 100, 50, 50, RULE);    // 규칙
 	// 재시작, 타이틀 버튼 만들고 주소 저장
-	ap_data->button_adress.p_game_ctrl[0] = CreateButton("Restart", 70, 490, 100, 40, RESTART);    // 재시작
-	ap_data->button_adress.p_game_ctrl[1] = CreateButton("Title", 180, 490, 100, 40, TITLE);       // 타이틀
+	ap_data->button_adress.p_game_ctrl[0] = CreateButton("Restart", 70, 10, 100, 40, RESTART);    // 재시작
+	ap_data->button_adress.p_game_ctrl[1] = CreateButton("Title", 180, 10, 100, 40, TITLE);       // 타이틀
 
 	// 재시작, 타이틀 버튼 숨기기
 	ShowControl(ap_data->button_adress.p_game_ctrl[0], SW_HIDE);
@@ -612,34 +612,34 @@ void drawBoard(pGameData ap_data)
 {
 	Clear();    // 화면 초기화
 
-	Rectangle(5, 495, 67, 523, WHITE, WHITE);    // 숫자 지우는 용도
-	TextOut(10, 500, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
-	TextOut(300, 500, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);    // 남은 깃발 개수 출력
+	Rectangle(5, 20, 67, 523, WHITE, WHITE);    // 숫자 지우는 용도
+	TextOut(10, 20, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
+	TextOut(300, 20, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);    // 남은 깃발 개수 출력
 
 	// 지뢰 개수, 빈칸, 깃발, 물음표 출력
 	for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 		for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
 			// 판 그리기
-			Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], WHITE, RGB(153, 255, 204));
+			Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, WHITE, RGB(153, 255, 204));
 
 			if (ap_data->click_state[y][x] == CLICKED)    // 클릭된 타일
-				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], WHITE, RGB(0, 204, 102));
+				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, WHITE, RGB(0, 204, 102));
 
 			switch (ap_data->board_state[y][x]) {
 			case nothing_open:    // 그냥 열려있는 타일
-				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
+				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, BLACK, GRAY);
 				break;
 			case mine_num1_open: case mine_num2_open: case mine_num3_open:
 			case mine_num4_open:					  case mine_num5_open:    // 주변의 지뢰 개수가 적힌 열린 타일
 			case mine_num6_open: case mine_num7_open: case mine_num8_open:
-				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
-				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], WHITE, "%d", ap_data->board_state[y][x] - 10);
+				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, BLACK, GRAY);
+				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, WHITE, "%d", ap_data->board_state[y][x] - 10);
 				break;
 			case flag:    // 깃발
-				DrawImageGP(ap_data->game_image.flag_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
+				DrawImageGP(ap_data->game_image.flag_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
 				break;
 			case questionMark:    // 물음표
-				DrawImageGP(ap_data->game_image.question_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
+				DrawImageGP(ap_data->game_image.question_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
 				break;
 			default:
 				break;
@@ -668,8 +668,8 @@ void drawBoard(pGameData ap_data)
 		for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 			for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
 				if (ap_data->board_state[y][x] == mine) {    // 지뢰 출력
-					Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
-					DrawImageGP(ap_data->game_image.bomb_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
+					Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, BLACK, GRAY);
+					DrawImageGP(ap_data->game_image.bomb_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
 				}
 				else if (ap_data->board_state[y][x] == flag && ap_data->board_temp[y][x] != mine) {    // 지뢰 잘못 찾은 깃발 출력
 					DrawImageGP(ap_data->game_image.X_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
