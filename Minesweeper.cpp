@@ -24,10 +24,10 @@ typedef struct _GameButton    // 버튼 주소
 
 typedef struct _GameImage    // 게임 이미지
 {
-	void *flag_image; // 깃발 그림
-	void *bomb_image; // 지뢰 그림2
-	void *question_image; // 물음표 그림
-	void *X_image; // 틀렸을 때 표시 할 그림
+	void *flag_image;        // 깃발 그림
+	void *bomb_image;        // 지뢰 그림2
+	void *question_image;    // 물음표 그림
+	void *X_image;           // 틀렸을 때 표시 할 그림
 } GameImage, *pGameImage;
 
 typedef struct _GameData // 게임 플레이중 필요한 데이터
@@ -514,6 +514,7 @@ int main()
 	FILE *fp = NULL;    // 파일 포인터 생성
 	struct stat buffer;    // stat를 사용하기 위한 구조체
 
+	// GetFocus(), gh_main_wnd
 	if (stat("MinesweeperRank.bin", &buffer) == -1) {    // 파일이 없으면
 		MessageBox(gh_main_wnd, "랭킹 파일 생성.", "알림", MB_ICONINFORMATION | MB_OK);
 		// 랭킹 파일이 없으면 파일을 만들고 모두 UINT64의 최대값으로 초기화
@@ -642,6 +643,8 @@ void drawBoard(pGameData ap_data)
 
 	// 게임 클리어시 걸린 시간 출력
 	if (ap_data->game_step == CLEARGME) {
+		ShowDisplay();    // 화면에 출력
+
 		// 시, 분, 초 구하기
 		UINT64 minute = ap_data->curr_time / 60000;
 		UINT64 sec = (ap_data->curr_time % 60000) / 1000;
@@ -650,7 +653,7 @@ void drawBoard(pGameData ap_data)
 		TCHAR text[100];
 		sprintf_s(text, "Time : %02llu'%02llu\"%03llu", minute, sec, mSec);
 
-		MessageBox(GetFocus(), text, "GameClear!", MB_ICONINFORMATION | MB_OK);
+		MessageBox(gh_main_wnd, text, "GameClear!", MB_ICONINFORMATION | MB_OK);
 		writeRank(ap_data);    // 랭킹 작성
 	}
 
@@ -668,10 +671,12 @@ void drawBoard(pGameData ap_data)
 					
 			}
 		}
-		ShowDisplay();    // 화면에 출력
 
+		resetClickState(ap_data);    // 클릭 상태 초기화
+		ShowDisplay();    // 화면에 출력
 		writeRank(ap_data);    // 랭킹 작성
-		MessageBox(GetFocus(), "try again.", "GameOver!", MB_ICONINFORMATION | MB_OK);
+		MessageBox(gh_main_wnd, "try again.", "GameOver!", MB_ICONINFORMATION | MB_OK);
+		return;    // 종료
 	}
 
 	resetClickState(ap_data);    // 클릭 상태 초기화
@@ -862,8 +867,6 @@ void flagQuesBoard(pGameData ap_data, int x, int y)
 		else if (ap_data->board_state[y][x] == questionMark) {    // 물음표 이면
 			ap_data->board_state[y][x] = ap_data->board_temp[y][x];    // 물음표를 원래 상태로 변경
 		}
-
-		drawBoard(ap_data);    // 판 그리기
 	}
 }
 
@@ -906,5 +909,5 @@ void checkAndOpen8Board(pGameData ap_data, int x, int y)
 		ap_data->game_step = GAMEOVER;
 	}
 
-	drawBoard(ap_data);    // 판 그리기
+	//drawBoard(ap_data);    // 판 그리기
 }
