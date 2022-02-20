@@ -908,6 +908,4 @@ void checkAndOpen8Board(pGameData ap_data, int x, int y)
 	else if (totalFlagNum == ap_data->board_state[y][x] - 10) {
 		ap_data->game_step = GAMEOVER;
 	}
-
-	//drawBoard(ap_data);    // 판 그리기
 }
