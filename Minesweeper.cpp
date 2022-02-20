@@ -7,13 +7,13 @@
 #include <Windowsx.h>    // lParam의 값을 x, y좌표로 바꾸기 위한 매크로가 들어있는 헤더파일
 
 #pragma pack(push, 1)
-typedef struct _Rank
+typedef struct _Rank    // 랭킹 구조
 {
 	UINT64 rank[3][10];    // 랭킹 저장할 배열, 정렬하기 편하게 가로 세로의 값을 정함
 	double winningPercentage[2][3];    // 승률
 } Rank, *pRank;
 
-typedef struct _GameButton
+typedef struct _GameButton    // 버튼 주소
 {
 	void *p_select_ctrl[3];    // 난이도 선택 버튼 주소
 	void *p_game_ctrl[2];      // 재시작, 타이틀 버튼 주소
@@ -21,6 +21,15 @@ typedef struct _GameButton
 	void *p_game_rule;         // 게임 규칙 버튼 주소
 	void *p_clear_rank;        // 랭킹 초기화 버튼 주소
 } GameButton, *pGameButton;
+
+typedef struct _GameImage    // 게임 이미지
+{
+	void *flag_image; // 깃발 그림
+	void *bomb_image; // 지뢰 그림2
+	void *question_image; // 물음표 그림
+	void *X_image; // 틀렸을 때 표시 할 그림
+	BYTE image_rate[3];    // 이미지 비율
+} GameImage, *pGameImage;
 
 typedef struct _GameData // 게임 플레이중 필요한 데이터
 {
@@ -43,10 +52,12 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	UINT64 curr_time;            // 현재 시간
 	POINT down_pos;              // 눌렀을 때 커서 좌표
 	GameButton button_adress;    // 게임 버튼 주소 모아놓은 구조체
+	GameImage game_image;        // 게임에 쓰일 이미지들을 모아놓은 구조체
 } GameData, *pGameData;
 #pragma pack(pop)
 
 void CreateSelectLVButton();    // 난이도 선택 버튼 생성
+void setImage();
 void resetClickState(pGameData ap_data);    // 클릭 상태 초기화
 void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data, int x, int y);     // 랜덤으로 지뢰 생성
@@ -528,6 +539,8 @@ int main()
 		fclose(fp);    // 파일 닫기
 	}
 
+	setImage();
+
 	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
 	CreateSelectLVButton();    // 난이도 선택 버튼 생성
 	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
@@ -560,6 +573,20 @@ void CreateSelectLVButton() {
 	ShowControl(ap_data->button_adress.p_clear_rank, SW_HIDE);
 }
 
+void setImage()
+{
+	pGameData ap_data = (pGameData)GetAppData();
+
+	ap_data->game_image.flag_image = LoadImageGP("flag.png");             // 깃발 그림
+	ap_data->game_image.bomb_image = LoadImageGP("bomb.png");             // 지뢰 그림2
+	ap_data->game_image.question_image = LoadImageGP("question.png");     // 물음표 그림
+	ap_data->game_image.X_image = LoadImageGP("draw_X.png");              // 틀렸을 때 표시 할 그림
+
+	ap_data->game_image.image_rate[0] = EASY_GRID_SIZE;      // 쉬움에서 이미지의 크기
+	ap_data->game_image.image_rate[1] = NORMAL_GRID_SIZE;    // 보통에서 이미지의 크기
+	ap_data->game_image.image_rate[2] = HARD_GRID_SIZE;      // 어려움에서 이미지의 크기
+}
+
 // 클릭 생태를 저장하는 판 초기화
 void resetClickState(pGameData ap_data)
 {
@@ -573,12 +600,6 @@ void resetClickState(pGameData ap_data)
 // 판 그리기
 void drawBoard(pGameData ap_data)
 {
-	void* flag_image_2 = LoadImageGP("flag2.png"); // 깃발 그림
-	void* bomb_image = LoadImageGP("bomb.png"); // 지뢰 그림1
-	void* bomb_image_2 = LoadImageGP("bomb2.png"); // 지뢰 그림2
-	void* question_image = LoadImageGP("question.png"); // 물음표 그림
-	void* X_image = LoadImageGP("draw_X.png"); // 틀렸을 때 표시 할 그림
-
 	Clear();    // 화면 초기화
 
 	Rectangle(5, 495, 67, 523, WHITE, WHITE);    // 숫자 지우는 용도
@@ -604,37 +625,12 @@ void drawBoard(pGameData ap_data)
 				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
 				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], WHITE, "%d", ap_data->board_state[y][x] - 10);
 				break;
-
 			case flag:    // 깃발
-				if (ap_data->level == 1000) {
-					Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(255, 255, 255), RGB(153, 255, 204));
-					DrawImageGP(flag_image_2, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.080, 0.064);
-				}
-				else if (ap_data->level == 1001) {
-					Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(255, 255, 255), RGB(153, 255, 204));
-					DrawImageGP(flag_image_2, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.055, 0.047);
-				}
-				else if (ap_data->level == 1002) {
-					Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(255, 255, 255), RGB(153, 255, 204));
-					DrawImageGP(flag_image_2, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.05, 0.04);
-				}
+				DrawImageGP(ap_data->game_image.flag_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], ap_data->game_image.image_rate[ap_data->level - 1000], ap_data->game_image.image_rate[ap_data->level - 1000]);
 				break;
-
 			case questionMark:    // 물음표
-				if (ap_data->level == 1000) {
-					Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(255, 255, 255), RGB(153, 255, 204));
-					DrawImageGP(question_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.04, 0.04);
-				}
-				else if (ap_data->level == 1001) {
-					Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(255, 255, 255), RGB(153, 255, 204));
-					DrawImageGP(question_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.03, 0.03);
-				}
-				else if (ap_data->level == 1002) {
-					Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(255, 255, 255), RGB(153, 255, 204));
-					DrawImageGP(question_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.025, 0.025);
-				}
+				DrawImageGP(ap_data->game_image.question_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], ap_data->game_image.image_rate[ap_data->level - 1000], ap_data->game_image.image_rate[ap_data->level - 1000]);
 				break;
-
 			default:
 				break;
 			}
@@ -657,32 +653,12 @@ void drawBoard(pGameData ap_data)
 	if (ap_data->game_step == GAMEOVER) {
 		for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 			for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
-				if (ap_data->board_state[y][x] == mine)    // 지뢰 출력
-				{
-					if (ap_data->level == 1000) {
-						Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000],BLACK, GRAY);
-						DrawImageGP(bomb_image_2, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.077, 0.077);
-					}
-					else if (ap_data->level == 1001) {
-						Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
-						DrawImageGP(bomb_image_2, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.054, 0.054);
-					}
-					else if (ap_data->level == 1002) {
-						Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], BLACK, GRAY);
-						DrawImageGP(bomb_image_2, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.045, 0.045);
-					}
+				if (ap_data->board_state[y][x] == mine) {    // 지뢰 출력
+					Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000], RGB(255, 255, 255), RGB(153, 255, 204));
+					DrawImageGP(ap_data->game_image.bomb_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], ap_data->game_image.image_rate[ap_data->level - 1000], ap_data->game_image.image_rate[ap_data->level - 1000]);
 				}
-				else if (ap_data->board_state[y][x] == flag && ap_data->board_temp[y][x] != mine)    // 지뢰 잘못 찾은 깃발 출력
-				{
-					if (ap_data->level == 1000) {
-						DrawImageGP(X_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.050, 0.065);
-					}
-					else if (ap_data->level == 1001) {
-						DrawImageGP(X_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.039, 0.050);
-					}
-					else if (ap_data->level == 1002) {
-						DrawImageGP(X_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], 0.033, 0.039);
-					}
+				else if (ap_data->board_state[y][x] == flag && ap_data->board_temp[y][x] != mine) {    // 지뢰 잘못 찾은 깃발 출력
+					DrawImageGP(ap_data->game_image.X_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], ap_data->game_image.image_rate[ap_data->level - 1000], ap_data->game_image.image_rate[ap_data->level - 1000]);
 				}
 					
 			}
