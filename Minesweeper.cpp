@@ -56,7 +56,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 #pragma pack(pop)
 
 void CreateSelectLVButton();    // 난이도 선택 버튼 생성
-void setImage();
+void setImage();    // 이미지 지정
 void resetClickState(pGameData ap_data);    // 클릭 상태 초기화
 void drawBoard(pGameData ap_data);    // 보드판 그리기
 void randMine(pGameData ap_data, int x, int y);     // 랜덤으로 지뢰 생성
@@ -175,6 +175,9 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		break;
 	// 타이틀 버튼
 	case TITLE:
+		ChangeWorkSize(770, 570); // 작업 영역을 설정한다.
+		SelectFontObject("굴림", 20, 1);
+
 		Clear();    // 화면 초기화
 		TextOut(10, 10, BLACK, "Minesweeper");    // 제목
 
@@ -201,6 +204,9 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->level = a_ctrl_id;    // 선택한 난이도 저장
 		p_data->game_step = PLAYGAME;    // 다음단계로 이동
 
+		ChangeWorkSize(p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000], 550); // 작업 영역을 설정한다.
+		SelectFontObject("굴림", 20, 1);
+
 		// 난이도 선택 버튼 숨기기
 		ShowControl(p_data->button_adress.p_select_ctrl[0], SW_HIDE);
 		ShowControl(p_data->button_adress.p_select_ctrl[1], SW_HIDE);
@@ -220,11 +226,11 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		break;
 	// 룰 버튼
 	case RULE:
-		MessageBox(gh_main_wnd, "        **지뢰가 없는 칸을 모두 클릭하면 클리어 됩니다.**\n\n \
+		MessageBox(gh_main_wnd, "                  **지뢰가 없는 칸을 모두 클릭하면 클리어 됩니다.**\n\n \
 1. 마우스 왼쪽을 누르면 닫혀있는 칸이 열립니다.\n \
-2. 마우스 오른쪽 버튼을 누르면 깃발, 물음표, 닫힌 타일 순으로     토글됩니다.\n \
-3. 주변 지뢰의 개수만큼 깃발을 놓고 마우스 휠 클릭 or 왼쪽        더블클릭 or 왼쪽과 오른쪽 클릭 or 마우스 왼쪽 버튼과 컨        트롤 키를 클릭시 주변 8칸이 열립니다.\n \
-4. 숫자가 적힌 타일은 주변 지뢰의 개수를 나타냅니다.", "규칙", MB_ICONINFORMATION | MB_OK);
+2. 마우스 오른쪽 버튼을 누르면 깃발, 물음표, 닫힌 타일 순으로 토글됩니      다.\n \
+3. 주변 지뢰의 개수만큼 깃발을 놓고 마우스 휠 클릭 or 왼쪽 더블클릭 or     왼쪽과 오른쪽 클릭 or 마우스 왼쪽 버튼과 컨트롤 키를 클릭시 주변 8      칸이 열립니다.\n \
+4. 숫자가 적힌 타일은 주변 지뢰의 개수를 나타냅니다.", "규칙", MB_OK);
 		break;
 	// 랭킹 버튼
 	case RANK:
@@ -489,6 +495,8 @@ ON_MESSAGE(OnMouseLeftDOWN, OnMouseLeftUP, NULL, OnCommand, NULL, OnUserMsg)
 
 int main()
 {
+	ChangeWorkSize(770, 570); // 작업 영역을 설정한다.
+
 	// 글꼴, 글자 크기 적용
 	SelectFontObject("굴림", 20, 1);
 
@@ -538,8 +546,7 @@ int main()
 		fclose(fp);    // 파일 닫기
 	}
 
-	setImage();
-
+	setImage();    // 이미지 지정
 	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
 	CreateSelectLVButton();    // 난이도 선택 버튼 생성
 	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
@@ -572,6 +579,7 @@ void CreateSelectLVButton() {
 	ShowControl(ap_data->button_adress.p_clear_rank, SW_HIDE);
 }
 
+// 이미지 지정
 void setImage()
 {
 	pGameData ap_data = (pGameData)GetAppData();
@@ -639,8 +647,10 @@ void drawBoard(pGameData ap_data)
 		UINT64 sec = (ap_data->curr_time % 60000) / 1000;
 		UINT64 mSec = ap_data->curr_time % 1000;
 
-		TextOut(400, 500, RGB(100, 255, 100), "Game Clear!");    // 게임 클리어!
-		TextOut(550, 500, BLACK, "Time : %02llu'%02llu\"%03llu", minute, sec, mSec);    // 걸린 시간 출력
+		TCHAR text[100];
+		sprintf_s(text, "Time : %02llu'%02llu\"%03llu", minute, sec, mSec);
+
+		MessageBox(GetFocus(), text, "GameClear!", MB_ICONINFORMATION | MB_OK);
 		writeRank(ap_data);    // 랭킹 작성
 	}
 
@@ -658,9 +668,10 @@ void drawBoard(pGameData ap_data)
 					
 			}
 		}
+		ShowDisplay();    // 화면에 출력
 
-		TextOut(400, 500, RGB(255, 0, 0), "Game Over!");    // 게임 오버!
 		writeRank(ap_data);    // 랭킹 작성
+		MessageBox(GetFocus(), "try again.", "GameOver!", MB_ICONINFORMATION | MB_OK);
 	}
 
 	resetClickState(ap_data);    // 클릭 상태 초기화
