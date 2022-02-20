@@ -672,7 +672,7 @@ void drawBoard(pGameData ap_data)
 					DrawImageGP(ap_data->game_image.bomb_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
 				}
 				else if (ap_data->board_state[y][x] == flag && ap_data->board_temp[y][x] != mine) {    // 지뢰 잘못 찾은 깃발 출력
-					DrawImageGP(ap_data->game_image.X_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
+					DrawImageGP(ap_data->game_image.X_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
 				}
 					
 			}
