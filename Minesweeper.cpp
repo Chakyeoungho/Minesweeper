@@ -507,24 +507,6 @@ ON_MESSAGE(OnMouseLeftDOWN, OnMouseLeftUP, NULL, OnCommand, NULL, OnUserMsg)
 
 int main()
 {
-	ChangeWorkSize(770, 570); // 작업 영역을 설정한다.
-
-	// 글꼴, 글자 크기 적용
-	SelectFontObject("consolas", 25, 0);
-
-	GameData data = { { { 0, }, },    // 판 상태
-					  { { 0, }, },    // 깃발과 물음표를 제외한 판 상태
-					  { { 0, }, },    // 판 클릭 상태
-					  { EASY_GRID_SIZE, NORMAL_GRID_SIZE, HARD_GRID_SIZE },    // 타일 하나의 크기 배열
-					  { EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT   },    // x축 타일의 개수
-					  { EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT   },    // y축 타일의 개수
-					  { EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM  },    // 지뢰의 개수
-					  { RGB(0, 153, 255), RGB(18, 175, 48), RGB(255, 0, 0),    // 주변 지뢰 숫자별 글자 색 1 ~ 8
-						RGB(16, 32, 255),                   RGB(128, 25, 0),
-						RGB(0, 158, 95),  RGB(197, 0, 160), RGB(255, 137, 0), },
-					  0, SELECTLV, 0, 0, false, false, false, false };    // 나며지 게임에 필요한 데이터
-	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
-
 	Rank temp;    // 임시 변수
 	FILE *fp = NULL;    // 파일 포인터 생성
 	struct stat buffer;    // stat를 사용하기 위한 구조체
@@ -562,7 +544,30 @@ int main()
 		fclose(fp);    // 파일 닫기
 	}
 
+	ChangeWorkSize(770, 570); // 작업 영역을 설정한다.
+
+	// 현재 윈도우의 속성 정보를 얻는다!
+	int wnd_style = ::GetWindowLong(gh_main_wnd, GWL_STYLE);
+	// 현재 속성 정보에서 WS_THICKFRAME 속성만 제거하고 속성을 다시 설정한다.
+	// WS_THICKFRAME 속성이 윈도우 크기를 변경하는 속성이라서 마우스로
+	// 윈도우 테두리를 잡아서 크기를 변경할 수 없게 된다.
+	::SetWindowLong(gh_main_wnd, GWL_STYLE, wnd_style & ~WS_THICKFRAME);
+
+	GameData data = { { { 0, }, },    // 판 상태
+					  { { 0, }, },    // 깃발과 물음표를 제외한 판 상태
+					  { { 0, }, },    // 판 클릭 상태
+					  { EASY_GRID_SIZE, NORMAL_GRID_SIZE, HARD_GRID_SIZE },    // 타일 하나의 크기 배열
+					  { EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT   },    // x축 타일의 개수
+					  { EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT   },    // y축 타일의 개수
+					  { EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM  },    // 지뢰의 개수
+					  { RGB(0, 153, 255), RGB(18, 175, 48), RGB(255, 0, 0),    // 주변 지뢰 숫자별 글자 색 1 ~ 8
+						RGB(16, 32, 255),                   RGB(128, 25, 0),
+						RGB(0, 158, 95),  RGB(197, 0, 160), RGB(255, 137, 0), },
+					  0, SELECTLV, 0, 0, false, false, false, false };    // 나며지 게임에 필요한 데이터
+	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
+
 	setImage();    // 이미지 지정
+	SelectFontObject("consolas", 25, 0);    // 글꼴, 글자 크기 적용
 	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
 	CreateSelectLVButton();    // 난이도 선택 버튼 생성
 	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
