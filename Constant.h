@@ -63,6 +63,10 @@ enum boardState {
 #define NORMAL_GRID_SIZE 30    // 보통 난이도 사각형 크기
 #define HARD_GRID_SIZE   25    // 어려움 난이도 사각형 크기
 
+// 타일 전체 이동 도트 개수
+#define X_MOVING (0)
+#define Y_MOVING (60)
+
 // 총 타일 개수
 #define EASY_BOARD_NUM   (( 9) * ( 9))    // 쉬움 난이도 총 타일 개수
 #define NORMAL_BOARD_NUM ((16) * (16))    // 보통 난이도 총 타일 개수

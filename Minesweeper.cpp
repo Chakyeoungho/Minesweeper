@@ -100,7 +100,7 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 		p_data->isMLBClicked = true;    // 마우스 왼쪽 누름
 
 		// 마우스 왼쪽 버튼과 컨트롤 키를 동시에 눌렀을 경우
-		if (x >= 0 && a_pos.y >= 60 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
+		if (a_pos.x >= X_MOVING && a_pos.y >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
 			p_data->down_pos = a_pos;    // 눌렀을 때 좌표를 저장
 
 			if (a_mixed_key & MK_CONTROL || p_data->isMRBClicked) {
@@ -134,7 +134,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 		int x = (int)a_pos.x / p_data->gridSize[p_data->level - 1000], y = (int)(a_pos.y - 60) / p_data->gridSize[p_data->level - 1000];    // 좌표
 		int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)(p_data->down_pos.y - 60) / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
 
-		if (x >= 0 && a_pos.y >= 60 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 범위 확인
+		if (a_pos.x >= X_MOVING && a_pos.y >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 범위 확인
 			x == downX && y == downY) {    // 눌렀었을 때와 같은 타일인지 검사
 			// 마우스 왼쪽 버튼과 컨트롤 키를 동시에 눌렀을 경우
 			if (a_mixed_key & MK_CONTROL || p_data->isMRBClicked) {
@@ -390,7 +390,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = (y_pos - 60) / p_data->gridSize[p_data->level - 1000];    // 좌표
 			p_data->isMRBClicked = true;    // 마우스 오른쪽 누름
 
-			if (x >= 0 && y_pos >= 60 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
+			if (x_pos >= X_MOVING && y_pos >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
 				// 눌렀을 때 좌표를 저장
 				p_data->down_pos.x = x_pos;
 				p_data->down_pos.y = y_pos;
@@ -425,7 +425,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 		if (p_data->game_step == PLAYGAME) {
 			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = (y_pos - 60) / p_data->gridSize[p_data->level - 1000];    // 좌표
 
-			if (x >= 0 && y_pos >= 60 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
+			if (x_pos >= X_MOVING && y_pos >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
 				// 눌렀을 때 좌표를 저장
 				p_data->down_pos.x = x_pos;
 				p_data->down_pos.y = y_pos;
@@ -454,7 +454,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = (y_pos - 60) / p_data->gridSize[p_data->level - 1000];    // 좌표
 			int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)(p_data->down_pos.y - 60) / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
 
-			if (x >= 0 && y_pos >= 60 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
+			if (x_pos >= X_MOVING && y_pos >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
 				x == downX && y == downY) {
 				if (p_data->isMLBClicked) {
 					// 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
@@ -487,7 +487,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 			int x = x_pos / p_data->gridSize[p_data->level - 1000], y = (y_pos - 60) / p_data->gridSize[p_data->level - 1000];    // 좌표
 			int downX = (int)p_data->down_pos.x / p_data->gridSize[p_data->level - 1000], downY = (int)(p_data->down_pos.y - 60) / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
 
-			if (x >= 0 && y_pos >= 60 && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
+			if (x_pos >= X_MOVING && y_pos >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
 				p_data->board_state[y][x] >= nothing_open && p_data->board_state[y][x] <= mine_num8_open) {
 				// 주변 지뢰의 개수와 같게 깃발을 놓고 휠 클릭, 왼쪽 더블클릭, 왼쪽 + 컨트롤 클릭을 하면 근처 8개의판이 열림
 				checkAndOpen8Board(p_data, x, y);
