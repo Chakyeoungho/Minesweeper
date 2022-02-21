@@ -45,6 +45,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	BYTE x_count[3];             // x축 타일의 개수
 	BYTE y_count[3];             // y축 타일의 개수
 	BYTE mineNum[3];             // 지뢰의 개수
+	COLORREF num_color[8];       // 주변 지뢰 숫자별 글자 색
 	BYTE currFlagNum;            // 현재 깃발의 개수
 	BYTE game_step;              // 현재 게임 단계
 	BYTE rankB_toggle;           // 랭킹 버튼 토글용 변수
@@ -82,7 +83,9 @@ TIMER StopWatchProc(NOT_USE_TIMER_DATA)
 	if (ap_data->game_step == PLAYGAME && ap_data->isFirstClicked) {    // 게임 중, 첫 클릭을 했을 때만
 		ap_data->curr_time = GetTickCount64() - ap_data->start_time;    // 현재 시간 구하기
 		Rectangle(5, 15, 67, 43, WHITE, WHITE);    // 숫자 지우는 용도
+		SelectFontObject("consolas", 25, 0);
 		TextOut(10, 20, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
+		SelectFontObject("consolas", ap_data->gridSize[ap_data->level - 1000], 0);
 		ShowDisplay();    // 화면에 출력
 	}
 }
@@ -111,7 +114,8 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 						p_data->click_state[i][j] = CLICKED;    // 클릭
 					}
 				}
-			} else {    // 마우스 왼쪽 버튼만 눌렀을 경우
+			}
+			else {    // 마우스 왼쪽 버튼만 눌렀을 경우
 				if (p_data->board_state[y][x] <= mine) {    // 닫힌 칸만
 					p_data->click_state[y][x] = CLICKED;    // 클릭
 				}
@@ -140,8 +144,9 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 				}
 
 				p_data->isMRBClicked = false;    // 마우스 오른쪽 땜
-			} else if (p_data->isMLBClicked) {    // 마우스 왼쪽 버튼만 눌렀을 경우
-			 // 첫 클릭 시 시간 초기화
+			}
+			else if (p_data->isMLBClicked) {    // 마우스 왼쪽 버튼만 눌렀을 경우
+		  // 첫 클릭 시 시간 초기화
 				if (p_data->isFirstMLBClicked == false) {
 					randMine(p_data, x, y);    // 지뢰 랜덤으로 생성
 					p_data->start_time = GetTickCount64();    // 시작 시간 재설정
@@ -165,7 +170,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 	pGameData p_data = (pGameData)GetAppData();
 
 	switch (a_ctrl_id) {
-	// 다시 시작 버튼
+		// 다시 시작 버튼
 	case RESTART:
 		p_data->game_step = PLAYGAME;    // 게임 스텝 게임중으로 변경
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
@@ -179,10 +184,10 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
 		drawBoard(p_data);    // 판 그리기
 		break;
-	// 타이틀 버튼
+		// 타이틀 버튼
 	case TITLE:
 		ChangeWorkSize(770, 570); // 작업 영역을 설정한다.
-		SelectFontObject("굴림", 20, 1);
+		SelectFontObject("consolas", 25, 0);
 
 		Clear();    // 화면 초기화
 		TextOut(10, 10, BLACK, "Minesweeper");    // 제목
@@ -205,13 +210,12 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->game_step = SELECTLV;    // 난이도 선택단계로 수정
 		ShowDisplay();
 		break;
-	// 난이도 버튼
+		// 난이도 버튼
 	case EASY: case NORMAL: case HARD:
 		p_data->level = a_ctrl_id;    // 선택한 난이도 저장
 		p_data->game_step = PLAYGAME;    // 다음단계로 이동
 
 		ChangeWorkSize(p_data->gridSize[p_data->level - 1000] * p_data->x_count[p_data->level - 1000], p_data->gridSize[p_data->level - 1000] * p_data->y_count[p_data->level - 1000] + 60); // 작업 영역을 설정한다.
-		SelectFontObject("굴림", 20, 1);
 
 		// 난이도 선택 버튼 숨기기
 		ShowControl(p_data->button_adress.p_select_ctrl[0], SW_HIDE);
@@ -230,7 +234,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->isMRBClicked = false;    // 마우스 오른쪽 땜
 		drawBoard(p_data);    // 판 그리기
 		break;
-	// 룰 버튼
+		// 룰 버튼
 	case RULE:
 		MessageBox(gh_main_wnd, "                  **지뢰가 없는 칸을 모두 클릭하면 클리어 됩니다.**\n\n \
 1. 마우스 왼쪽을 누르면 닫혀있는 칸이 열립니다.\n \
@@ -238,7 +242,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 3. 주변 지뢰의 개수만큼 깃발을 놓고 마우스 휠 클릭 or 왼쪽 더블클릭 or     왼쪽과 오른쪽 클릭 or 마우스 왼쪽 버튼과 컨트롤 키를 클릭시 주변 8      칸이 열립니다.\n \
 4. 숫자가 적힌 타일은 주변 지뢰의 개수를 나타냅니다.", "규칙", MB_OK);
 		break;
-	// 랭킹 버튼
+		// 랭킹 버튼
 	case RANK:
 		switch (p_data->rankB_toggle) {
 		case 0:
@@ -286,14 +290,14 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			}
 
 			// 승률 영어로 출력
-			TextOut(25, 472, "Winning");
+			TextOut(18, 472, "Winning");
 			TextOut(5, 500, "Percentage");
 
 			// 단계별 승률 출력
 			TextOut(120, 486, "%f %%", (data.winningPercentage[0][0] / data.winningPercentage[1][0]) * 100);
 			TextOut(320, 486, "%f %%", (data.winningPercentage[0][1] / data.winningPercentage[1][1]) * 100);
 			TextOut(520, 486, "%f %%", (data.winningPercentage[0][2] / data.winningPercentage[1][2]) * 100);
-			
+
 			fclose(fp);    // 파일 닫기
 			break;
 		}    // 중괄호로 감싸줘야 파일을 사용할 수 있음
@@ -314,7 +318,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->rankB_toggle = !p_data->rankB_toggle;    // 랭킹버튼 토글
 		ShowDisplay();
 		break;
-	// 랭킹 초기화
+		// 랭킹 초기화
 	case CLEARRANK:
 		Clear();    // 화면 초기화
 
@@ -403,7 +407,8 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 						}
 					}
 					drawBoard(p_data);    // 판 그리기
-				} else {
+				}
+				else {
 					if (p_data->board_state[y][x] <= mine || p_data->board_state[y][x] >= flag) {
 						p_data->click_state[y][x] = CLICKED;    // 클릭
 						drawBoard(p_data);    // 판 그리기
@@ -457,7 +462,8 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 					checkClear(p_data);    // 게임 클리어 확인
 
 					p_data->isMLBClicked = false;    // 마우스 왼쪽 땜
-				} else if (p_data->isMRBClicked) {
+				}
+				else if (p_data->isMRBClicked) {
 					// 첫 클릭 시 시간 초기화
 					if (p_data->isFirstClicked == false) {
 						p_data->start_time = GetTickCount64();    // 시작 시간 재설정
@@ -504,7 +510,7 @@ int main()
 	ChangeWorkSize(770, 570); // 작업 영역을 설정한다.
 
 	// 글꼴, 글자 크기 적용
-	SelectFontObject("굴림", 20, 1);
+	SelectFontObject("consolas", 25, 0);
 
 	GameData data = { { { 0, }, },    // 판 상태
 					  { { 0, }, },    // 깃발과 물음표를 제외한 판 상태
@@ -513,7 +519,10 @@ int main()
 					  { EASY_X_COUNT,   NORMAL_X_COUNT,   HARD_X_COUNT   },    // x축 타일의 개수
 					  { EASY_Y_COUNT,   NORMAL_Y_COUNT,   HARD_Y_COUNT   },    // y축 타일의 개수
 					  { EASY_MINE_NUM,  NORMAL_MINE_NUM,  HARD_MINE_NUM  },    // 지뢰의 개수
-					  0, SELECTLV, 0, 0, false, false, false, false };
+					  { RGB(0, 153, 255), RGB(18, 175, 48), RGB(255, 0, 0),    // 주변 지뢰 숫자별 글자 색 1 ~ 8
+						RGB(16, 32, 255),                   RGB(128, 25, 0),
+						RGB(0, 158, 95),  RGB(197, 0, 160), RGB(255, 137, 0), },
+					  0, SELECTLV, 0, 0, false, false, false, false };    // 나며지 게임에 필요한 데이터
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 
 	Rank temp;    // 임시 변수
@@ -612,9 +621,11 @@ void drawBoard(pGameData ap_data)
 {
 	Clear();    // 화면 초기화
 
+	SelectFontObject("consolas", 25, 0);
 	Rectangle(5, 20, 67, 523, WHITE, WHITE);    // 숫자 지우는 용도
 	TextOut(10, 20, BLACK, "%03d", ap_data->curr_time / 1000);    // 현재 시간 출력
 	TextOut(300, 20, BLACK, "%02d", ap_data->mineNum[ap_data->level - 1000] - ap_data->currFlagNum);    // 남은 깃발 개수 출력
+	SelectFontObject("consolas", ap_data->gridSize[ap_data->level - 1000], 0);
 
 	// 지뢰 개수, 빈칸, 깃발, 물음표 출력
 	for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
@@ -627,13 +638,13 @@ void drawBoard(pGameData ap_data)
 
 			switch (ap_data->board_state[y][x]) {
 			case nothing_open:    // 그냥 열려있는 타일
-				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, BLACK, GRAY);
+				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, DARKGRAY, GRAY);
 				break;
 			case mine_num1_open: case mine_num2_open: case mine_num3_open:
 			case mine_num4_open:					  case mine_num5_open:    // 주변의 지뢰 개수가 적힌 열린 타일
 			case mine_num6_open: case mine_num7_open: case mine_num8_open:
-				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, BLACK, GRAY);
-				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, WHITE, "%d", ap_data->board_state[y][x] - 10);
+				Rectangle(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, DARKGRAY, GRAY);
+				TextOut(x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, ap_data->num_color[ap_data->board_state[y][x] - 11], "%d", ap_data->board_state[y][x] - 10);
 				break;
 			case flag:    // 깃발
 				DrawImageGP(ap_data->game_image.flag_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
@@ -674,7 +685,7 @@ void drawBoard(pGameData ap_data)
 				else if (ap_data->board_state[y][x] == flag && ap_data->board_temp[y][x] != mine) {    // 지뢰 잘못 찾은 깃발 출력
 					DrawImageGP(ap_data->game_image.X_image, x * ap_data->gridSize[ap_data->level - 1000], y * ap_data->gridSize[ap_data->level - 1000] + 60, ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
 				}
-					
+
 			}
 		}
 
@@ -801,13 +812,14 @@ void writeRank(pGameData ap_data)
 
 			fclose(fp);    // 파일 닫기
 		}
-	} else if (ap_data->game_step == GAMEOVER) {
+	}
+	else if (ap_data->game_step == GAMEOVER) {
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
 		if (fp == NULL) {    // 파일 열기에 실패하면
 			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
 			return;    // 종료
 		}
-		
+
 		data.winningPercentage[1][ap_data->level - 1000]++;    // 플래이 카운트
 
 		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기

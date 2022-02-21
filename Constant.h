@@ -78,8 +78,10 @@ enum boardState {
 #define YELLOW RGB(255, 255, 0)      // 노랑
 #define GREEN  RGB(0, 255, 0)        // 초록
 #define BLACK  RGB(0, 0, 0)          // 검은색
-#define GRAY   RGB(100, 100, 100)    // 회색
+#define GRAY   RGB(200, 200, 200)    // 회색
+#define DARKGRAY RGB(150, 150, 150)  // 어두운 회색
 #define WHITE  RGB(255, 255, 255)    // 흰색
+#define LIGHTBLUE RGB(143, 206, 255)
 
 // 현재 개임 단계
 #define SELECTLV 0    // 난이도 선택 화면
