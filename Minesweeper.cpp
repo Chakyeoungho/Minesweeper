@@ -290,7 +290,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			}
 
 			// 승률 영어로 출력
-			TextOut(18, 472, "Winning");
+			TextOut(25, 472, "Winning");
 			TextOut(5, 500, "Percentage");
 
 			// 단계별 승률 출력
