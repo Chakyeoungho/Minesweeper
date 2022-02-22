@@ -697,7 +697,7 @@ void drawBoard(pGameData ap_data)
 		resetClickState(ap_data);    // 클릭 상태 초기화
 		ShowDisplay();    // 화면에 출력
 		writeRank(ap_data);    // 랭킹 작성
-		MessageBox(gh_main_wnd, "try again.", "GameOver!", MB_ICONINFORMATION | MB_OK);
+		MessageBox(gh_main_wnd, "try again.", "GameOver!", MB_ICONERROR | MB_OK);
 		return;    // 종료
 	}
 
