@@ -684,7 +684,7 @@ void drawBoard(pGameData ap_data)
 		for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 			for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
 				if (ap_data->board_state[y][x] == mine) {    // 지뢰 출력
-					Rectangle(x * ap_data->gridSize[ap_data->level - 1000] + X_MOVING, y * ap_data->gridSize[ap_data->level - 1000] + Y_MOVING, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, BLACK, GRAY);
+					Rectangle(x * ap_data->gridSize[ap_data->level - 1000] + X_MOVING, y * ap_data->gridSize[ap_data->level - 1000] + Y_MOVING, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, DARKGRAY, GRAY);
 					DrawImageGP(ap_data->game_image.bomb_image, x * ap_data->gridSize[ap_data->level - 1000] + X_MOVING, y * ap_data->gridSize[ap_data->level - 1000] + Y_MOVING, ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
 				}
 				else if (ap_data->board_state[y][x] == flag && ap_data->board_temp[y][x] != mine) {    // 지뢰 잘못 찾은 깃발 출력
