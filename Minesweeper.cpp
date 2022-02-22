@@ -683,7 +683,7 @@ void drawBoard(pGameData ap_data)
 	if (ap_data->game_step == GAMEOVER) {
 		for (int y = 0; y < ap_data->y_count[ap_data->level - 1000]; y++) {
 			for (int x = 0; x < ap_data->x_count[ap_data->level - 1000]; x++) {
-				if (ap_data->board_state[y][x] == mine) {    // 지뢰 출력
+				if (ap_data->board_state[y][x] == mine || (ap_data->board_state[y][x] == questionMark && ap_data->board_temp[y][x] == mine)) {    // 지뢰 출력
 					Rectangle(x * ap_data->gridSize[ap_data->level - 1000] + X_MOVING, y * ap_data->gridSize[ap_data->level - 1000] + Y_MOVING, (x + 1) * ap_data->gridSize[ap_data->level - 1000], (y + 1) * ap_data->gridSize[ap_data->level - 1000] + 60, DARKGRAY, GRAY);
 					DrawImageGP(ap_data->game_image.bomb_image, x * ap_data->gridSize[ap_data->level - 1000] + X_MOVING, y * ap_data->gridSize[ap_data->level - 1000] + Y_MOVING, ap_data->gridSize[ap_data->level - 1000], ap_data->gridSize[ap_data->level - 1000]);
 				}
