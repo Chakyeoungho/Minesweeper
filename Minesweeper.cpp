@@ -313,7 +313,9 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		}    // 중괄호로 감싸줘야 파일을 사용할 수 있음
 		default:
 			Clear();
+			SelectFontObject("consolas", 70, 1);
 			TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
+			SelectFontObject("consolas", 25, 0);    // 글꼴, 글자 크기 적용
 			// 난이도 선택 버튼 보이기
 			ShowControl(p_data->button_adress.p_select_ctrl[0], SW_SHOW);
 			ShowControl(p_data->button_adress.p_select_ctrl[1], SW_SHOW);
@@ -350,6 +352,10 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			}
 		}
 
+		SelectFontObject("consolas", 70, 1);
+		TextOut(100, 10, "R A N G K I N G");    // 랭킹
+		SelectFontObject("consolas", 25, 1);
+
 		TextOut(120, 100, "Easy");      // 쉬움
 		TextOut(320, 100, "Normal");    // 보통
 		TextOut(520, 100, "Hard");      // 어려움
@@ -361,8 +367,9 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		}
 
 		// 승률 영어로 출력
-		TextOut(25, 472, "Winning");
-		TextOut(5, 500, "Percentage");
+		SelectFontObject("consolas", 40, 1);
+		TextOut(200, 440, "Winning Percentage");
+		SelectFontObject("consolas", 25, 1);
 
 		// 단계별 승률 출력
 		TextOut(120, 486, "%f %%", (data.winningPercentage[0][0] / data.winningPercentage[1][0]) * 100);
