@@ -29,7 +29,6 @@ typedef struct _GameButton    // 버튼 주소
 	void *p_select_ctrl[3];    // 난이도 선택 버튼 주소
 	void *p_game_ctrl[2];      // 재시작, 타이틀 버튼 주소
 	void *p_game_rank;         // 랭킹 버튼 주소
-	void *p_game_rule;         // 게임 규칙 버튼 주소
 	void *p_clear_rank;        // 랭킹 초기화 버튼 주소
 } GameButton, *pGameButton;
 
@@ -59,6 +58,7 @@ typedef struct _GameData // 게임 플레이중 필요한 데이터
 	bool isFirstMLBClicked;      // 게임 시작후 마우스 왼쪽 버튼을 클릭 했는지 체크하는 변수
 	bool isMLBClicked;           // 좌클릭 확인
 	bool isMRBClicked;           // 우클릭 확인
+	bool flag_on;                // 깃발 온 오프 확인
 	UINT64 start_time;           // 시작 시간
 	UINT64 curr_time;            // 현재 시간
 	POINT down_pos;              // 눌렀을 때 커서 좌표
@@ -103,6 +103,7 @@ void OnMouseLeftDOWN(int a_mixed_key, POINT a_pos)
 	if (p_data->game_step == PLAYGAME) {
 		int x = (int)(a_pos.x - X_MOVING) / p_data->gridSize[p_data->level - 1000], y = (int)(a_pos.y - Y_MOVING) / p_data->gridSize[p_data->level - 1000];    // 좌표
 		p_data->isMLBClicked = true;    // 마우스 왼쪽 누름
+		sndPlaySound(".\\Music\\Down.wav", SND_ASYNC);    // 음악 재생
 
 		// 마우스 왼쪽 버튼과 컨트롤 키를 동시에 눌렀을 경우
 		if (a_pos.x >= X_MOVING && a_pos.y >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
@@ -138,6 +139,7 @@ void OnMouseLeftUP(int a_mixed_key, POINT a_pos)
 	if (p_data->game_step == PLAYGAME) {
 		int x = (int)(a_pos.x - X_MOVING) / p_data->gridSize[p_data->level - 1000], y = (int)(a_pos.y - Y_MOVING) / p_data->gridSize[p_data->level - 1000];    // 좌표
 		int downX = (int)(p_data->down_pos.x - X_MOVING) / p_data->gridSize[p_data->level - 1000], downY = (int)(p_data->down_pos.y - Y_MOVING) / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
+		sndPlaySound(".\\Music\\Up.wav", SND_ASYNC);    // 음악 재생
 
 		if (a_pos.x >= X_MOVING && a_pos.y >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 범위 확인
 			x == downX && y == downY) {    // 눌렀었을 때와 같은 타일인지 검사
@@ -175,7 +177,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 	pGameData p_data = (pGameData)GetAppData();
 
 	switch (a_ctrl_id) {
-		// 다시 시작 버튼
+	// 다시 시작 버튼
 	case RESTART:
 		p_data->game_step = PLAYGAME;    // 게임 스텝 게임중으로 변경
 		p_data->currFlagNum = 0;    // 깃발 개수 초기화
@@ -189,13 +191,15 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->curr_time = GetTickCount64() - p_data->start_time;    // 현재 시간 구하기
 		drawBoard(p_data);    // 판 그리기
 		break;
-		// 타이틀 버튼
+	// 타이틀 버튼
 	case TITLE:
 		ChangeWorkSize(770, 570); // 작업 영역을 설정한다.
 		SelectFontObject("consolas", 25, 0);
 
 		Clear();    // 화면 초기화
-		TextOut(10, 10, BLACK, "Minesweeper");    // 제목
+		SelectFontObject("consolas", 70, 1);
+		TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
+		SelectFontObject("consolas", 25, 0);    // 글꼴, 글자 크기 적용
 
 		// 재시작, 타이틀 버튼 숨기기
 		ShowControl(p_data->button_adress.p_game_ctrl[0], SW_HIDE);
@@ -204,8 +208,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		ShowControl(p_data->button_adress.p_select_ctrl[0], SW_SHOW);
 		ShowControl(p_data->button_adress.p_select_ctrl[1], SW_SHOW);
 		ShowControl(p_data->button_adress.p_select_ctrl[2], SW_SHOW);
-		// 게임 룰, 랭킹 버튼 보이기
-		ShowControl(p_data->button_adress.p_game_rule, SW_SHOW);
+		// 게임 랭킹 버튼 보이기
 		ShowControl(p_data->button_adress.p_game_rank, SW_SHOW);
 
 		memset(p_data, 0, sizeof(char) * 16 * 30 * 2);    // 게임정보 초기화
@@ -215,7 +218,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->game_step = SELECTLV;    // 난이도 선택단계로 수정
 		ShowDisplay();
 		break;
-		// 난이도 버튼
+	// 난이도 버튼
 	case EASY: case NORMAL: case HARD:
 		p_data->level = a_ctrl_id;    // 선택한 난이도 저장
 		p_data->game_step = PLAYGAME;    // 다음단계로 이동
@@ -226,8 +229,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		ShowControl(p_data->button_adress.p_select_ctrl[0], SW_HIDE);
 		ShowControl(p_data->button_adress.p_select_ctrl[1], SW_HIDE);
 		ShowControl(p_data->button_adress.p_select_ctrl[2], SW_HIDE);
-		// 게임 룰, 랭킹 버튼 숨기기
-		ShowControl(p_data->button_adress.p_game_rule, SW_HIDE);
+		// 게임 랭킹 버튼 숨기기
 		ShowControl(p_data->button_adress.p_game_rank, SW_HIDE);
 		// 재시작, 타이틀 버튼 보이기
 		ShowControl(p_data->button_adress.p_game_ctrl[0], SW_SHOW);
@@ -239,15 +241,15 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->isMRBClicked = false;    // 마우스 오른쪽 땜
 		drawBoard(p_data);    // 판 그리기
 		break;
-		// 룰 버튼
-	case RULE:
+	// 룰 버튼
+	case IDM_ABOUT:
 		MessageBox(gh_main_wnd, "       **지뢰가 없는 칸을 모두 클릭하면 클리어 됩니다.**\n\n \
 1. 마우스 왼쪽을 누르면 닫혀있는 칸이 열립니다.\n \
 2. 마우스 오른쪽 버튼을 누르면 깃발, 물음표, 닫힌 타일 순으로     토글됩니다.\n \
 3. 주변 지뢰의 개수만큼 깃발을 놓고 마우스 휠 클릭 or 왼쪽        더블클릭 or 왼쪽과 오른쪽 클릭 or 마우스 왼쪽 버튼과 컨트     롤 키를 클릭시 주변 8칸이 열립니다.\n \
 4. 숫자가 적힌 타일은 주변 지뢰의 개수를 나타냅니다.", "규칙", MB_ICONQUESTION | MB_OK);
 		break;
-		// 랭킹 버튼
+	// 랭킹 버튼
 	case RANK:
 		switch (p_data->rankB_toggle) {
 		case 0:
@@ -257,8 +259,6 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			ShowControl(p_data->button_adress.p_select_ctrl[0], SW_HIDE);
 			ShowControl(p_data->button_adress.p_select_ctrl[1], SW_HIDE);
 			ShowControl(p_data->button_adress.p_select_ctrl[2], SW_HIDE);
-			// 게임 룰 버튼 숨기기
-			ShowControl(p_data->button_adress.p_game_rule, SW_HIDE);
 			// 랭킹 초기화 버튼 보이기
 			ShowControl(p_data->button_adress.p_clear_rank, SW_SHOW);
 
@@ -276,6 +276,10 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 				fclose(fp);    // 파일 닫기
 				return;    // 종료
 			}
+
+			SelectFontObject("consolas", 70, 1);
+			TextOut(100, 10, "R A N G K I N G");    // 랭킹
+			SelectFontObject("consolas", 25, 1);
 
 			TextOut(120, 100, "Easy");      // 쉬움
 			TextOut(320, 100, "Normal");    // 보통
@@ -295,8 +299,9 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			}
 
 			// 승률 영어로 출력
-			TextOut(25, 472, "Winning");
-			TextOut(5, 500, "Percentage");
+			SelectFontObject("consolas", 40, 1);
+			TextOut(200, 440, "Winning Percentage");
+			SelectFontObject("consolas", 25, 1);
 
 			// 단계별 승률 출력
 			TextOut(120, 486, "%f %%", (data.winningPercentage[0][0] / data.winningPercentage[1][0]) * 100);
@@ -313,8 +318,6 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 			ShowControl(p_data->button_adress.p_select_ctrl[0], SW_SHOW);
 			ShowControl(p_data->button_adress.p_select_ctrl[1], SW_SHOW);
 			ShowControl(p_data->button_adress.p_select_ctrl[2], SW_SHOW);
-			// 게임 룰 버튼 보이기
-			ShowControl(p_data->button_adress.p_game_rule, SW_SHOW);
 			// 랭킹 초기화 버튼 숨기기
 			ShowControl(p_data->button_adress.p_clear_rank, SW_HIDE);
 			break;
@@ -323,7 +326,7 @@ void OnCommand(INT32 a_ctrl_id, INT32 a_notify_code, void *ap_ctrl)
 		p_data->rankB_toggle = !p_data->rankB_toggle;    // 랭킹버튼 토글
 		ShowDisplay();
 		break;
-		// 랭킹 초기화
+	// 랭킹 초기화
 	case CLEARRANK:
 		Clear();    // 화면 초기화
 
@@ -394,6 +397,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 		if (p_data->game_step == PLAYGAME) {
 			int x = (x_pos - X_MOVING) / p_data->gridSize[p_data->level - 1000], y = (y_pos - Y_MOVING) / p_data->gridSize[p_data->level - 1000];    // 좌표
 			p_data->isMRBClicked = true;    // 마우스 오른쪽 누름
+			sndPlaySound(".\\Music\\Down.wav", SND_ASYNC);    // 음악 재생
 
 			if (x_pos >= X_MOVING && y_pos >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
 				// 눌렀을 때 좌표를 저장
@@ -429,6 +433,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 	if (a_message_id == WM_MBUTTONDOWN || a_message_id == WM_MBUTTONDBLCLK) {
 		if (p_data->game_step == PLAYGAME) {
 			int x = (x_pos - X_MOVING) / p_data->gridSize[p_data->level - 1000], y = (y_pos - Y_MOVING) / p_data->gridSize[p_data->level - 1000];    // 좌표
+			sndPlaySound(".\\Music\\Down.wav", SND_ASYNC);    // 음악 재생
 
 			if (x_pos >= X_MOVING && y_pos >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000]) {    // 마우스 범위 확인
 				// 눌렀을 때 좌표를 저장
@@ -458,6 +463,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 		if (p_data->game_step == PLAYGAME) {
 			int x = (x_pos - X_MOVING) / p_data->gridSize[p_data->level - 1000], y = (y_pos - Y_MOVING) / p_data->gridSize[p_data->level - 1000];    // 좌표
 			int downX = (int)(p_data->down_pos.x - X_MOVING) / p_data->gridSize[p_data->level - 1000], downY = (int)(p_data->down_pos.y - Y_MOVING) / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
+			sndPlaySound(".\\Music\\Up.wav", SND_ASYNC);    // 음악 재생
 
 			if (x_pos >= X_MOVING && y_pos >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
 				x == downX && y == downY) {
@@ -491,6 +497,7 @@ int OnUserMsg(HWND ah_wnd, UINT a_message_id, WPARAM wParam, LPARAM lParam)
 		if (p_data->game_step == PLAYGAME) {
 			int x = (x_pos - X_MOVING) / p_data->gridSize[p_data->level - 1000], y = (y_pos - Y_MOVING) / p_data->gridSize[p_data->level - 1000];    // 좌표
 			int downX = (int)(p_data->down_pos.x - X_MOVING) / p_data->gridSize[p_data->level - 1000], downY = (int)(p_data->down_pos.y - Y_MOVING) / p_data->gridSize[p_data->level - 1000];    // 버튼울 눌렀을때의 좌표
+			sndPlaySound(".\\Music\\Up.wav", SND_ASYNC);    // 음악 재생
 
 			if (x_pos >= X_MOVING && y_pos >= Y_MOVING && x < p_data->x_count[p_data->level - 1000] && y < p_data->y_count[p_data->level - 1000] &&    // 마우스 범위 확인
 				p_data->board_state[y][x] >= nothing_open && p_data->board_state[y][x] <= mine_num8_open) {
@@ -512,7 +519,7 @@ ON_MESSAGE(OnMouseLeftDOWN, OnMouseLeftUP, NULL, OnCommand, NULL, OnUserMsg)
 
 int main()
 {
-	// waveOutSetVolume(0, (DWORD)0x40004000);    // 사운드 볼륨 조정 오른쪽 왼쪽
+	waveOutSetVolume(0, (DWORD)0x50005000);    // 사운드 볼륨 조정 오른쪽 왼쪽
 	// sndPlaySound("2.wav", SND_ASYNC | SND_LOOP);    // 음악 재생
 
 	Rank temp;    // 임시 변수
@@ -570,12 +577,13 @@ int main()
 					  { RGB(0, 153, 255), RGB(18, 175, 48), RGB(255, 0, 0),    // 주변 지뢰 숫자별 글자 색 1 ~ 8
 						RGB(16, 32, 255),                   RGB(128, 25, 0),
 						RGB(0, 158, 95),  RGB(197, 0, 160), RGB(255, 137, 0), },
-					  0, SELECTLV, 0, 0, false, false, false, false };    // 나며지 게임에 필요한 데이터
+					  0, SELECTLV, 0, 0, false, false, false, false, false };    // 나며지 게임에 필요한 데이터
 	SetAppData(&data, sizeof(GameData));    // data를 내부변수로 설정
 
 	setImage();    // 이미지 지정
-	SelectFontObject("consolas", 25, 0);    // 글꼴, 글자 크기 적용
+	SelectFontObject("consolas", 70, 1);
 	TextOut(10, 10, BLACK, "Minesweeper");    // 게임 제목
+	SelectFontObject("consolas", 25, 0);    // 글꼴, 글자 크기 적용
 	CreateSelectLVButton();    // 난이도 선택 버튼 생성
 	SetTimer(1, 100, StopWatchProc);    // 0.1초(100ms)마다 함수를 호출
 
@@ -594,8 +602,6 @@ void CreateSelectLVButton() {
 	// 랭킹, 랭킹 초기화 버튼 만들고 주소 저장
 	ap_data->button_adress.p_game_rank = CreateButton("Rank", 700, 50, 50, 50, RANK);          // 랭킹
 	ap_data->button_adress.p_clear_rank = CreateButton("Clear", 700, 500, 50, 50, CLEARRANK);    // 랭킹 초기화
-	// 게임 룰 버튼 만들고 주소 저장
-	ap_data->button_adress.p_game_rule = CreateButton("Rule", 310, 100, 50, 50, RULE);    // 규칙
 	// 재시작, 타이틀 버튼 만들고 주소 저장
 	ap_data->button_adress.p_game_ctrl[0] = CreateButton("Restart", 70, 10, 100, 40, RESTART);    // 재시작
 	ap_data->button_adress.p_game_ctrl[1] = CreateButton("Title", 180, 10, 100, 40, TITLE);       // 타이틀
