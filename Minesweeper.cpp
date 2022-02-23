@@ -1,8 +1,9 @@
-﻿/*******************************************
-*                                          *
-*    32비트용으로 만들어진 프로그램입니다.    *
-*                                          *
-********************************************/
+﻿/************************************************* 
+*                                                *
+*    32비트용으로 만들어진 프로그램입니다.          *
+*    32비트로 설정해야 프로그램이 잘 작동됩니다.    *
+*                                                *
+**************************************************/
 
 #include "pch.h"
 #include <stdio.h>       // 파일 입출력, 로컬 랭킹 기록용
@@ -11,6 +12,10 @@
 #include <time.h>        // 난수의 시드값을 설정하기 위한 헤더파일
 #include "tipsware.h"
 #include <Windowsx.h>    // lParam의 값을 x, y좌표로 바꾸기 위한 매크로가 들어있는 헤더파일
+
+// sndPlaySound 함수를 사용하기 위해 필요한 헤더 파일과 라이브러리 추가!
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
 
 #pragma pack(push, 1)
 typedef struct _Rank    // 랭킹 구조
@@ -507,13 +512,15 @@ ON_MESSAGE(OnMouseLeftDOWN, OnMouseLeftUP, NULL, OnCommand, NULL, OnUserMsg)
 
 int main()
 {
+	// waveOutSetVolume(0, (DWORD)0x40004000);    // 사운드 볼륨 조정 오른쪽 왼쪽
+	// sndPlaySound("2.wav", SND_ASYNC | SND_LOOP);    // 음악 재생
+
 	Rank temp;    // 임시 변수
 	FILE *fp = NULL;    // 파일 포인터 생성
 	struct stat buffer;    // stat를 사용하기 위한 구조체
 
-	// GetFocus(), gh_main_wnd
 	if (stat("MinesweeperRank.bin", &buffer) == -1) {    // 파일이 없으면
-		MessageBox(gh_main_wnd, "랭킹 파일 생성.", "알림", MB_ICONINFORMATION | MB_OK);
+		MessageBox(gh_main_wnd, "랭킹 파일 생성.", "알림", MB_ICONINFORMATION | MB_OK);    // GetFocus(), gh_main_wnd
 		// 랭킹 파일이 없으면 파일을 만들고 모두 UINT64의 최대값으로 초기화
 		// 파일이 있으면 0을 반환
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 바이너리 쓰기 형식으로 열기
