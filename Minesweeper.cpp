@@ -612,10 +612,10 @@ void setImage()
 {
 	pGameData ap_data = (pGameData)GetAppData();
 
-	ap_data->game_image.flag_image = LoadImageGP("flag.png");             // 깃발 그림
-	ap_data->game_image.bomb_image = LoadImageGP("bomb.png");             // 지뢰 그림2
-	ap_data->game_image.question_image = LoadImageGP("question.png");     // 물음표 그림
-	ap_data->game_image.X_image = LoadImageGP("draw_X.png");              // 틀렸을 때 표시 할 그림
+	ap_data->game_image.flag_image = LoadImageGP(".\\Image\\flag.png");             // 깃발 그림
+	ap_data->game_image.bomb_image = LoadImageGP(".\\Image\\bomb.png");             // 지뢰 그림2
+	ap_data->game_image.question_image = LoadImageGP(".\\Image\\question.png");     // 물음표 그림
+	ap_data->game_image.X_image = LoadImageGP(".\\Image\\draw_X.png");              // 틀렸을 때 표시 할 그림
 }
 
 // 클릭 생태를 저장하는 판 초기화
