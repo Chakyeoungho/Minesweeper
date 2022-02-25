@@ -817,26 +817,27 @@ void writeRank(pGameData ap_data)
 
 	// 랭킹 업데이트
 	if (ap_data->game_step == CLEARGME) {
-		if (ap_data->curr_time < data.rank[ap_data->level - 1000][9]) {    // 랭킹 10위 이내에 들면
-			fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
-			if (fp == NULL) {    // 파일 열기에 실패하면
-				MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
-				return;    // 종료
-			}
-
-			data.winningPercentage[0][ap_data->level - 1000]++;    // 클리어 횟수
-			data.winningPercentage[1][ap_data->level - 1000]++;    // 플래이 카운트
-			data.rank[ap_data->level - 1000][9] = ap_data->curr_time;    // 시간 저장
-			rank_bubble_sort(data.rank[ap_data->level - 1000], 10);    // 랭킹 정렬
-
-			if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
-				MessageBox(gh_main_wnd, "파일 쓰기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
-				fclose(fp);    // 파일 닫기
-				return;    // 파일 포인터 생성
-			}
-
-			fclose(fp);    // 파일 닫기
+		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
+		if (fp == NULL) {    // 파일 열기에 실패하면
+			MessageBox(gh_main_wnd, "파일 열기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+			return;    // 종료
 		}
+
+		data.winningPercentage[0][ap_data->level - 1000]++;    // 클리어 횟수
+		data.winningPercentage[1][ap_data->level - 1000]++;    // 플래이 카운트
+
+		if (ap_data->curr_time < data.rank[ap_data->level - 1000][9]) {    // 랭킹 10위 이내에 들면
+			data.rank[ap_data->level - 1000][9] = ap_data->curr_time;      // 시간 저장
+			rank_bubble_sort(data.rank[ap_data->level - 1000], 10);        // 랭킹 정렬
+		}
+
+		if (fwrite(&data, sizeof(Rank), 1, fp) < 1) {    // rank 구조체로 파일 읽기
+			MessageBox(gh_main_wnd, "파일 쓰기 실패.", "오류", MB_ICONINFORMATION | MB_OK);    // 오류 출력
+			fclose(fp);    // 파일 닫기
+			return;    // 파일 포인터 생성
+		}
+
+		fclose(fp);    // 파일 닫기
 	}
 	else if (ap_data->game_step == GAMEOVER) {
 		fopen_s(&fp, "MinesweeperRank.bin", "wb");    // 랭킹 파일을 쓰기 용도로 열기
